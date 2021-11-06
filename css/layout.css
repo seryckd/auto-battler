@@ -1,0 +1,47 @@
+
+.board {
+    display: flex;
+    flex-direction: column;
+}
+
+.tray {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    background:lightgray;
+    height: 80px;
+}
+
+.minion {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    background: lightcoral;
+    flex: 1 auto;
+    margin: 5px;
+    width: 70px;
+    max-width: 70px;
+    height: 70px;
+    max-height: 70px;
+    border-radius: 10px;
+}
+
+.minion > .name {
+    grid-row: 1;
+    grid-column-start: 1;
+    grid-column-end: 3;
+    text-align: center;
+}
+
+.minion > .attack {
+    grid-row: 2;
+    grid-column: 1;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.minion > .health {
+    grid-row: 2;
+    grid-column: 2;
+    text-align: center;
+}

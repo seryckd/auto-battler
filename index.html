@@ -1,0 +1,55 @@
+<html>
+   <head>
+      <link href="css/layout.css" rel="stylesheet" type="text/css">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   </head>
+
+   <body>
+      <header>
+         <h1>Auto Battler</h1>
+      </header>
+      
+      <main>
+
+         <section title="controls">
+            <button type="button" id="next">next</button>
+         </section>
+
+         <section title="board">
+            <div class="board">
+               <div class="tray" id="tray1">
+               </div>
+               <div class="tray" id="tray2">
+               </div>
+            </div>
+         </section>
+
+      </main>
+
+
+      <script type="module">
+
+         import { Battler } from './battler.js';          
+         import { Minion } from './minion.js';
+         import { Player } from './player.js';
+         import { Viewer } from './viewer.js';
+
+
+         let m1 = new Minion('Imp', 1, 1);
+         let m2 = new Minion('George', 3, 4);
+
+         let p1 = new Player('p1', [m1, m2, m1]);
+         let p2 = new Player('p2', [m1,m1]);
+
+         let script = new Battler(p1, p2).battle();
+         
+         let viewer = new Viewer(JSON.parse(script));
+
+         document.getElementById('next').addEventListener('click', event => {
+            viewer.next();
+         });
+   
+      </script>
+   </body>
+</html>
+
