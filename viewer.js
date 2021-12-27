@@ -31,7 +31,41 @@ export class Viewer {
 
         console.log(action);
 
-        if (action.action === 'change') {
+        if (action.action === 'attack') {
+            let attackMin = document.getElementById(this.makeDomId(action.id));
+            let targetMin = document.getElementById(this.makeDomId(action.targetId));
+
+            const source = this.minionInfo(attackMin);
+            const target = this.minionInfo(targetMin);
+
+            // The source minion center moves towards the target minion center
+            // but stops before it gets there
+            const bigX = target.x - source.x;
+            const bigY = target.y - source.y;
+            const bigH = Math.sqrt(bigX*bigX + bigY*bigY);
+            const smallH = bigH - 1.5*target.radius;
+            const smallX = smallH * (bigX/bigH);
+            const smallY = smallH * (bigY/bigH);
+
+            const anim = attackMin.animate([
+                { transform: 'translate(0px, 0px)'},
+                { transform: `translate(${smallX}px, ${smallY}px)` }
+            ], {
+                // timing options
+                duration: 1000,
+                iterations: 1
+            }).onfinish = function() {
+                console.log('finished 1st anim');
+                attackMin.animate([
+                    { transform: `translate(${smallX}px, ${smallY}px)` },
+                    { transform: 'translate(0px, 0px)'}    
+                ], {
+                    duration: 1000,
+                    iterations: 1    
+                });
+            };
+
+        } else if (action.action === 'change') {
 
             let minion = document.getElementById(this.makeDomId(action.id));
             let attr = minion.getElementsByClassName(action.stat)[0];
@@ -55,20 +89,30 @@ export class Viewer {
 
     createMinion(minion) {
 
-        function addAttr(name, value) {
-           let attr = document.createElement("div");
-           attr.className = name;
-           attr.innerText = value;
-           return attr;
-        }
-
         let min = document.createElement('div');
         min.className = "minion";
         min.id = this.makeDomId(minion.id);
-        min.appendChild(addAttr('name', minion.name));
-        min.appendChild(addAttr('attack', minion.attack));
-        min.appendChild(addAttr('health', minion.health));
+
+        min.innerHTML = `
+            <div class="name" id="${min.id}">
+                <svg class="name" width="60" height="60">
+                    <use href="#${minion.portrait}"/>
+                </svg>
+            </div>
+            <div class="attack">${minion.attack}</div>
+            <div class="health">${minion.health}</div>
+        `;
+
         return min;
-     }    
+     }
+
+     minionInfo(min) {
+         const r = min.getBoundingClientRect();
+         return {
+            x: r.left + r.width/2,
+            y: r.top + r.height/2,
+            radius: Math.max(r.width, r.height)/2
+         };
+     }
 }
 

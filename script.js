@@ -27,6 +27,7 @@ export class BattleScript {
             ms.push({
                 id: minion.getId(),
                 name: minion.getName(),
+                portrait: minion.getPortrait(),
                 attack: minion.getAttack(),
                 health: minion.getHealth()
             });
@@ -43,6 +44,14 @@ export class BattleScript {
             changes: []
         }
         this.script.combat.push(this.combat);
+    }
+
+    addAttack(attacker, defender) {
+        this.combat.changes.push({
+            action: 'attack',
+            id: attacker.getId(),
+            targetId: defender.getId()
+        });
     }
 
     addChange(minion, stat, value) {

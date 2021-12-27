@@ -121,6 +121,8 @@ export class Battler {
         attackPlayer.output();
         defendPlayer.output();
 
+        this.bs.addAttack(attackMinion, defendMinion);
+
         let damage = attackMinion.getAttack();
         defendMinion.takeDamage(damage);
         this.bs.addChange(defendMinion, "health", defendMinion.getHealth());

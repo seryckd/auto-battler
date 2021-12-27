@@ -2,8 +2,9 @@ export class Minion {
 
     static counter = 0;
 
-    constructor(name, health, attack) {
+    constructor(name, portrait, health, attack) {
         this.name = name;
+        this.portrait = portrait;
         this.health = health;
         this.attack = attack;
         this.id = Minion.counter++;
@@ -15,6 +16,10 @@ export class Minion {
 
     getName() {
         return this.name;
+    }
+
+    getPortrait() {
+        return this.portrait;
     }
 
     getHealth() {
@@ -35,13 +40,14 @@ export class Minion {
     }
 
     clone() {
-        return new Minion(this.name, this.health, this.attack);
+        return new Minion(this.name, this.portrait, this.health, this.attack);
     }
 
     toString() {
         return "{"
             + "id:" + this.id
             + ",name:" + this.name
+            + ",portrait:" + this.portrait
             + ",attack:" + this.attack
             + ",health:" + this.health
             + "}";
