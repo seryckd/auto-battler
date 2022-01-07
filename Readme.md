@@ -7,8 +7,8 @@ auto plays it self based upon random numbers.
 It comprises of
 
 1. Setup of the board (not part of this codebase)
-2. Auto play the game and generate a script of what happened
-3. View the script like a movie
+2. Auto play the game and generate a transcript of what happened
+3. Play the transcript like a movie
 
 The thing that interested me was the game engine, as these types of games
 use the _Magic the Gathering_ style of a simple set of base rules that can

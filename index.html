@@ -12,7 +12,9 @@
       
       <main>      
          <section title="controls">
-            <button type="button" id="turn">turn</button>
+            <button type="button" id="play">play</button>
+            <button type="button" id="turn">next turn</button>
+            <button type="button" id="restart">restart</button>
          </section>
 
          <section title="board">
@@ -34,20 +36,24 @@
          import { Player } from './player.js';
          import { Viewer } from './viewer.js';
 
+         let p1 = new Player('p1', ['001', '002', '001']);
+         let p2 = new Player('p2', ['001', '003']);
 
-         let m1 = new Minion('Eric', 'hydra', 1, 1);
-         let m2 = new Minion('George', 'medusa-head', 3, 4);
-         let m3 = new Minion('Harry', 'bad-gnome', 3, 4);
-
-         let p1 = new Player('p1', [m1, m2, m1]);
-         let p2 = new Player('p2', [m1,m3]);
-
-         let script = new Battler(p1, p2).battle();
+         let engine = new Battler(p1, p2);
          
-         let viewer = new Viewer(JSON.parse(script));
+         let viewer = new Viewer(JSON.parse(engine.battle()));
 
+         document.getElementById('play').addEventListener('click', event => {
+            document.getElementById('play').disabled = true;
+            viewer.play(() => document.getElementById('play').disabled = false);
+         });
          document.getElementById('turn').addEventListener('click', event => {
-            viewer.turn();
+            document.getElementById('turn').disabled = true;
+            viewer.turn(() => document.getElementById('turn').disabled = false);
+         });
+         document.getElementById('restart').addEventListener('click', event => {
+            viewer.cleanAll();
+            viewer = new Viewer(JSON.parse(engine.battle()));
          });
    
       </script>

@@ -16,16 +16,13 @@
 .minion {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    background: white;
     flex: 1 auto;
     margin: 5px;
     width: 80px;
     max-width: 80px;
     height: 100px;
     max-height: 100px;
-    border-radius: 60%/70%;
-    border: solid;
-    padding: 10px;
+    padding: 20px;
 }
 
 .minion > .name {
@@ -40,6 +37,7 @@
     grid-row: 2;
     grid-column: 1;
     text-align: center;
+    color: white;
     vertical-align: middle;
 }
 
@@ -47,14 +45,17 @@
     grid-row: 2;
     grid-column: 2;
     text-align: center;
+    color: white;
 }
 
-#min3 {
-    /*border: dashed;*/
-    animation: pulse 2s infinite;
+.minion.base {
+    background-image: url('backdrop.svg');
+    background-repeat: no-repeat;
 }
-
-@keyframes pulse {
-    0% { top: 0; left: 0; }
-    100% { top: 100px; left: 100%; }
+.minion.wall {
+    background-image: url('backdrop.svg'), url('wall.png');
+    background-repeat: no-repeat, no-repeat;
+    background-size: auto, cover;
+    border-radius: 10%;
+    border: 1px solid;
 }

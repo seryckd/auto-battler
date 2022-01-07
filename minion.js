@@ -1,12 +1,15 @@
+import { MinionDefs } from './minions-db.js'
 export class Minion {
 
     static counter = 0;
 
-    constructor(name, portrait, health, attack) {
-        this.name = name;
-        this.portrait = portrait;
-        this.health = health;
-        this.attack = attack;
+    constructor(id) {
+        this.defId = id;
+        this.name = MinionDefs[id].name;
+        this.portrait = MinionDefs[id].portrait;
+        this.attack = MinionDefs[id].attack;
+        this.health = MinionDefs[id].health;
+        this.traits = Array.from(MinionDefs[id].traits);
         this.id = Minion.counter++;
     }
 
@@ -30,6 +33,14 @@ export class Minion {
         return this.attack;
     }
 
+    getTraits() {
+        return this.traits;
+    }
+
+    hasTrait(trait) {
+        return this.traits[trait] !== undefined;
+    }
+
     isDead() {
         return this.health < 1;
     }
@@ -40,7 +51,7 @@ export class Minion {
     }
 
     clone() {
-        return new Minion(this.name, this.portrait, this.health, this.attack);
+        return new Minion(this.defId);
     }
 
     toString() {
@@ -50,6 +61,7 @@ export class Minion {
             + ",portrait:" + this.portrait
             + ",attack:" + this.attack
             + ",health:" + this.health
+            + ",traits:" + this.traits
             + "}";
     }
 }

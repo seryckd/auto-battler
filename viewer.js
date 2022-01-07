@@ -20,78 +20,124 @@ export class Viewer {
         });
     }
 
-    turn() {
+    play(playCallback) {
+        const self = this;
+        this.playCallback = playCallback;
 
-        this.turnCount++;
-
-        if (this.turnCount >= this.combat.length) {
-            return false;
+        function turnFinish(isEnd) {
+            if (!isEnd) {
+                self.turn(turnFinish);
+            } else {
+                console.log('End Play');
+                self.playCallback();
+            }
         }
 
-        console.log('turn:', this.turnCount);
+        console.log('Begin Play');
+        this.turn(turnFinish);
+    }
+
+    turn(turnCallback) {
+        const self = this;
+
+        this.turnCount++;
+        this.turnCallback = turnCallback;
+
+        if (this.turnCount >= this.combat.length) {
+            this.turnCallback(true);
+            return;
+        }
+
+        console.log('Begin Turn ', this.turnCount);
 
         this.actionCount = -1;
         this.actionContext = {};
 
-        this.action();
+        let action = this.combat[this.turnCount].changes[0];
+
+        this.actionContext.minion = document.getElementById(this.makeDomId(action.id));
+
+        this.actionContext.delta = this.deltaToTarget(
+            this.actionContext.minion,
+            document.getElementById(this.makeDomId(action.targetId)));
+
+        this.attackAnimation(
+            this.actionContext.minion, 
+            this.actionContext.delta.dX, 
+            this.actionContext.delta.dY)
+            .onfinish = function() {
+                self.action('change');
+            };
     }
 
-    action() {
-        const me=this;
-        let actions = this.combat[this.turnCount].changes;
-        this.actionCount++;
+    action(type) {
+        const self = this;
 
-        if (this.actionCount >= actions.length) {
-            this.retreatAnimation(
-                this.actionContext.minion, 
-                this.actionContext.delta.dX, 
-                this.actionContext.delta.dY)
-                .onfinish = function() {
-                    console.log('end of turn');
-                }
-            return;
+        const typeMap = {
+            'attack': 'attack',
+            'change': 'change',
+            'remove': 'remove',
+            'end': 'remove'
         }
-        
-        let action = actions[this.actionCount];
-        let minion = document.getElementById(this.makeDomId(action.id));
 
-        console.log(action);
+        let actions = this.combat[this.turnCount]
+            .changes
+            .filter(action => action.action === typeMap[type]);
 
-        switch(action.action) {
-            case 'attack': {
-                this.actionContext.minion = minion;
+        console.log(
+            'Turn:' + this.turnCount, 
+            'Action:' + type, 
+            actions, 
+            this.combat[this.turnCount].changes
+            );
 
-                this.actionContext.delta = this.deltaToTarget(
-                    minion,
-                    document.getElementById(this.makeDomId(action.targetId)));
+        switch(type) {
 
-                this.attackAnimation(
-                    minion, 
+            case 'change': {
+                let anim = null;
+                actions.forEach((action, index) => {
+                    const minion = document.getElementById(this.makeDomId(action.id));
+                    const attr = minion.getElementsByClassName(action.stat)[0];
+                    anim = this.damageAnimation(attr, action.value);
+                });
+                anim.onfinish = function() {
+                    self.action('remove');
+                };
+                break;
+            }
+
+            case 'remove': {
+                if (actions.length === 0) {
+                    self.action('end');
+                    return;
+                }
+                let anim = null;
+                actions.forEach(action => {
+                    const minion = document.getElementById(this.makeDomId(action.id));
+                    anim = this.deadAnimation(minion);
+                });
+                anim.onfinish = function() {
+                    actions.forEach(action => {
+                        document
+                            .getElementById(self.makeDomId(action.id))
+                            .remove();
+                    });
+                    self.action('end');
+                };
+                break;
+            }
+
+            case 'end': {
+                this.retreatAnimation(
+                    this.actionContext.minion, 
                     this.actionContext.delta.dX, 
                     this.actionContext.delta.dY)
                     .onfinish = function() {
-                        me.action();
-                    };
-                    
-                break;
-            }
-
-            case 'change': {
-                let attr = minion.getElementsByClassName(action.stat)[0];
-                this.damageAnimation(attr, action.value)
-                    .onfinish = function() {
-                        me.action();
-                    };
-                break;
-            }
-
-            case 'remove': 
-                this.deadAnimation(minion)
-                    .onfinish = function() {
-                        minion.remove();
-                        me.action();    
+                        console.log('End Turn');
+                        self.turnCallback(false);
                     }
                 break;
+            }
         }
     }
 
@@ -102,7 +148,13 @@ export class Viewer {
     createMinion(minion) {
 
         let min = document.createElement('div');
-        min.className = "minion";
+        min.classList.add('minion');
+
+        if (minion.traits.find(e => e === 'wall')) {
+            min.classList.add('wall');
+        } else {
+            min.classList.add('base');
+        }
         min.id = this.makeDomId(minion.id);
 
         min.innerHTML = `
@@ -200,7 +252,7 @@ export class Viewer {
                     color: 'blue'
                 },
                 {
-                    color: 'white'
+                    color: 'black'
                 }
             ], {
                 duration: 500,
@@ -218,6 +270,16 @@ export class Viewer {
             fill: 'forwards',
             iterations: 1
         });
+    }
+
+    cleanAll() {
+        // Returns a 'live' HTMLCollection (not an array)
+        // Copy it so 
+        //    1) we can use forEach 2
+        //    2) it does not mutate as we remove elements
+        Array
+            .from(document.getElementsByClassName('minion'))
+            .forEach(e => e.remove());
     }
 }
 
