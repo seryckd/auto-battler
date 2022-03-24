@@ -1,57 +1,16 @@
 
+import { Player } from './player.js'
+import { Slots } from './utils.js'
 import { BattleScript } from './script.js'
-import { Minion } from './minion.js';
 
-class Tray {
-    constructor(max) {
-        this.max = max;
-        this.slots = [];
-    }
-
-    add(minion) {
-        if (this.slots.length >= this.max) {
-            return false;
-        }
-        this.slots.push(minion);
-        return true;
-    }
-
-    empty() {
-        return this.slots.length === 0;
-    }
-
-    minions() {
-        return this.slots;
-    }
-
-    randomAttackerSlot() {
-        return Math.round(Math.random() * (this.slots.length - 1));
-    }
-
-    randomDefenderSlot() {
-        return Math.round(Math.random() * (this.slots.length - 1));
-    }
-
-    minionAtSlot(n) {
-        return this.slots[n];
-    }
-
-    removeSlot(i) {
-        console.log('before remove', this.slots);
-        this.slots.copyWithin(i, i+1);
-        this.slots.pop();
-        //this.slots.slice(i, 1);
-        console.log('after remove', this.slots);
-    }
-}
 
 class BattleContext {
     constructor(id, player) {
         this.id = id;
-        this.tray = new Tray(7);
+        this.slots = new Slots(7);
 
-        player.getMinionIds().forEach(id => {
-            this.tray.add(new Minion(id));
+        player.getMinions().forEach(element => {
+            this.slots.add(element.clone());
         });
     }
 
@@ -60,43 +19,40 @@ class BattleContext {
     }
 
     hasMinions() {
-        return !this.tray.empty();
+        return this.slots.count() > 0;
     }
 
     minions() {
-        return this.tray.minions();
+        return this.slots.all().filter(mins => mins !== null);
     }
 
-    randomAttackerSlot() {
-        return this.tray.randomAttackerSlot();
-    }
-
-    randomDefenderSlot() {
-        return this.tray.randomDefenderSlot();
+    randomSlot() {
+        return Math.round(Math.random() * (this.slots.count() - 1));
     }
 
     minionAtSlot(n) {
-        return this.tray.minionAtSlot(n)
+        return this.slots.fetch(n)
     }
 
     removeSlot(i) {
-        this.tray.removeSlot(i);
+        //delete this.slots[i];
+
+        this.slots.removePos(i);
     }
 
     output() {
         let o = new Object();
         o['id'] = this.getId();
-
-        this.tray.minions().forEach(m => {
+        for(var i=0; i<this.slots.count(); i++) {
             let om = new Object();
           
+            let m = this.slots.fetch(i);
             om['name'] = m.getName();
             om['attack'] = m.getAttack();
             om['health'] = m.getHealth();
-            om['traits'] = m.getTraits();
             
-            //o['min' + i] = om;
-        });
+            o['min' + i] = om;
+        }
 
         console.log(JSON.stringify(o));
     }
@@ -105,18 +61,16 @@ class BattleContext {
 export class Battler {
 
     constructor(p1, p2) {
-        this.p1 = p1;
-        this.p2 = p2;        
+
+        this.context1 = new BattleContext(p1.getName(), p1);
+        this.context2 = new BattleContext(p2.getName(), p2);
+
+        console.log(this.context2.minions());
+        
+        this.bs = new BattleScript(p1, this.context1.minions(), p2, this.context2.minions())
     }
 
     battle() {
-
-        this.context1 = new BattleContext(this.p1.getName(), this.p1);
-        this.context2 = new BattleContext(this.p2.getName(), this.p2);
-
-        this.bs = new BattleScript(
-            this.p1, this.context1.minions(), 
-            this.p2, this.context2.minions())
 
         let attackPlayer = this.context1;
         let defendPlayer = this.context2;
@@ -125,15 +79,14 @@ export class Battler {
 
         while(attackPlayer.hasMinions() && defendPlayer.hasMinions())
         {
-            let attackSlot = attackPlayer.randomAttackerSlot();
-            let defendSlot = defendPlayer.randomDefenderSlot();
+
+            let attackSlot = attackPlayer.randomSlot();
+            let defendSlot = defendPlayer.randomSlot();
 
             let attackMinion = attackPlayer.minionAtSlot(attackSlot);
             let defendMinion = defendPlayer.minionAtSlot(defendSlot);
-    
-            console.log('attack', attackSlot, attackMinion);
-            console.log('defend', defendSlot, defendMinion);
 
+    
             this.combat(attackPlayer, attackSlot, attackMinion, 
                 defendPlayer, defendSlot, defendMinion);
     
