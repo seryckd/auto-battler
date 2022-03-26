@@ -30,7 +30,7 @@ export class BattleScript {
                 portrait: minion.getPortrait(),
                 attack: minion.getAttack(),
                 health: minion.getHealth(),
-                traits: minion.getTraits()
+                skills: minion.getSkills()
             });
 
         });

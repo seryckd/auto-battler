@@ -11,8 +11,7 @@ export class Battler {
 
     battle() {
 
-        this.players[0].reset();
-        this.players[1].reset();
+        this.players.forEach(p => p.reset());
 
         this.bs = new BattleScript(
             this.players[0], this.players[0].getMinions(), 

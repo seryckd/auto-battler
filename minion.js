@@ -9,7 +9,7 @@ export class Minion {
         this.portrait = MinionDefs[id].portrait;
         this.attack = MinionDefs[id].attack;
         this.health = MinionDefs[id].health;
-        this.traits = Array.from(MinionDefs[id].traits);
+        this.skills = Array.from(MinionDefs[id].skills);
         this.id = Minion.counter++;
     }
 
@@ -33,12 +33,12 @@ export class Minion {
         return this.attack;
     }
 
-    getTraits() {
-        return this.traits;
+    getSkills() {
+        return this.skills;
     }
 
-    hasTrait(trait) {
-        return this.traits[trait] !== undefined;
+    hasSkill(skill) {
+        return this.skills[skill] !== undefined;
     }
 
     isDead() {
@@ -61,7 +61,7 @@ export class Minion {
             + ",portrait:" + this.portrait
             + ",attack:" + this.attack
             + ",health:" + this.health
-            + ",traits:" + this.traits
+            + ",skills:" + this.skills
             + "}";
     }
 }

@@ -150,7 +150,7 @@ export class Viewer {
         let min = document.createElement('div');
         min.classList.add('minion');
 
-        if (minion.traits.find(e => e === 'wall')) {
+        if (minion.skills.find(e => e === 'wall')) {
             min.classList.add('wall');
         } else {
             min.classList.add('base');
