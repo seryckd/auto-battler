@@ -1,28 +1,72 @@
 import { Minion } from "./minion.js";
-import { cloneClass } from "./utils.js";
 
 export class Player {
     constructor(name, minionIds) {
         this.name = name;
-        this.minionIds = minionIds;
+        this.startingMinions = minionIds;
+
+        this.reset();
+    }
+
+    reset() {
+        this.positions = [];
+        this.minions = new Map();
+
+        this.startingMinions.forEach(id => {
+            var min = new Minion(id);
+
+            this.minions.set(min.getId(), min);
+            this.positions.push(min);
+        });
     }
 
     getName() {
         return this.name;
     }
 
-    getMinionIds() {
-        return this.minionIds;
+    getMinions() {
+        const view = [];
+        for (let v of this.minions.values()) {
+            view.push(v)
+        }
+        return view;
     }
-    
-    /*
-    copyMinions() {
-        let copy = [];
-        this.minions.forEach((element,idx) => {
-            console.log('copy', )
-            copy.push(cloneClass(Minion.prototype, element));
-        });
-        return copy;
+
+    /**
+     * 0 offset
+     * @param {int} pos 
+     * @returns {Minion}
+     */
+    getMinionAtPosition(pos) {
+        return this.positions[pos];
     }
-    */
+
+    /**
+     * 0 offset
+     * @param {int} pos 
+     */
+    removeMinionAtPosition(pos) {
+        this.positions.splice(pos, 1);
+    }
+
+    /**
+     * 
+     * @returns {boolean}
+     */
+    hasMinions() {
+        return this.numPositions() > 0;
+    }
+
+    /**
+     * 0 - empty
+     * @returns {int}
+     */
+    numPositions() {
+        return this.positions.length;
+    }
+
+
+    log() {
+        console.log("player: %s, positions: $o, minions: $o", this.name, this.positions, this.minions);
+    }
 }
