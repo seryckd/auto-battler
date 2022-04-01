@@ -1,6 +1,8 @@
 
 # Auto Battler
 
+[Play/watch on GitHub here](https://seryckd.github.io/auto-battler/)
+
 This style of game is where the player sets up the game board and then the game
 auto plays it self based upon random numbers.
 
@@ -18,6 +20,39 @@ I also used the DOM and Webanimations API to do the display as I wanted to learn
 the technologies.  As usual this is vanilla Javascript that runs in the client.
 
 ------
+
+## Terminology
+
+- board
+  The board contains two fields of play
+- field of play
+  Contains a number of minions in positions
+- position
+  A place where a minion can be
+- turn
+  The turn begins when a minion from the field of play is 
+  selected to attack and ends when all side effects are finished.
+- phase
+  Each turn is split into phases
+- player
+  A player contains an ever changing set of minions in positions.
+- minion
+  Something with a defined set of attributes that is used to attack
+  and defend.
+- skill
+  A defined set of rules that a minion may have.
+
+## Base Rules
+
+A player may have 0-7 starting minions.
+A player is randomly selected to be the attacker on the first turn.
+At the end of the turn the other player becomes the attacker.
+Turns continue until there is one or more players with no minions.
+
+A turn begins by selecting an attacking and defending minion.
+Combat is resolved by comparing stats.
+One or minions may die and be removed.
+The turn ends.
 
 # Notes to be sorted out later
 

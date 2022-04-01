@@ -4,20 +4,20 @@ export var MinionDefs = {
         'portrait': 'hydra',
         'attack': 1,
         'health': 1,
-        'traits': ['wall']
+        'skills': ['wall']
     },
     '002': {
         'name': 'George the Medusa',
         'portrait': 'medusa-head',
         'attack': 3,
         'health': 4,
-        'traits': []
+        'skills': []
     },
     '003': {
         'name': 'Harry the Gnome',
         'portrait': 'bad-gnome',
         'attack': 3,
         'health': 4,
-        'traits': []
+        'skills': []
     }
 };
