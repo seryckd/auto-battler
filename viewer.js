@@ -28,12 +28,10 @@ export class Viewer {
             if (!isEnd) {
                 self.turn(turnFinish);
             } else {
-                console.log('End Play');
                 self.playCallback();
             }
         }
 
-        console.log('Begin Play');
         this.turn(turnFinish);
     }
 
@@ -48,18 +46,25 @@ export class Viewer {
             return;
         }
 
-        console.log('Begin Turn ', this.turnCount);
-
         this.actionCount = -1;
         this.actionContext = {};
 
         let action = this.combat[this.turnCount].changes[0];
 
         this.actionContext.minion = document.getElementById(this.makeDomId(action.id));
+        console.assert(this.actionContext.minion != null, 
+            "Minion %d not in dom", action.id);
+
+        let targetMinion = document.getElementById(this.makeDomId(action.targetId));
+        console.assert(this.actionContext.minion != null, 
+            "Target Minion %d not in dom", action.targetId);
+
+        console.log("start turn action=%o, min=%o", action, this.actionContext.minion);
 
         this.actionContext.delta = this.deltaToTarget(
             this.actionContext.minion,
-            document.getElementById(this.makeDomId(action.targetId)));
+            targetMinion
+            );
 
         this.attackAnimation(
             this.actionContext.minion, 
@@ -84,9 +89,9 @@ export class Viewer {
             .changes
             .filter(action => action.action === typeMap[type]);
 
-        console.log(
-            'Turn:' + this.turnCount, 
-            'Action:' + type, 
+        console.log("Turn: %i, Action: %s, Actions: %o, Changes:%o",
+            this.turnCount, 
+            type, 
             actions, 
             this.combat[this.turnCount].changes
             );
@@ -133,7 +138,6 @@ export class Viewer {
                     this.actionContext.delta.dX, 
                     this.actionContext.delta.dY)
                     .onfinish = function() {
-                        console.log('End Turn');
                         self.turnCallback(false);
                     }
                 break;
@@ -150,7 +154,7 @@ export class Viewer {
         let min = document.createElement('div');
         min.classList.add('minion');
 
-        if (minion.traits.find(e => e === 'wall')) {
+        if (minion.skills.find(e => e === 'wall')) {
             min.classList.add('wall');
         } else {
             min.classList.add('base');

@@ -52,10 +52,11 @@
             viewer.turn(() => document.getElementById('turn').disabled = false);
          });
          document.getElementById('restart').addEventListener('click', event => {
+            document.getElementById('play').disabled = false;
+            document.getElementById('turn').disabled = true;
             viewer.cleanAll();
             viewer = new Viewer(JSON.parse(engine.battle()));
          });
-   
       </script>
    </body>
 
