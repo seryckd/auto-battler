@@ -1,6 +1,8 @@
 
 # Auto Battler
 
+[Play/watch on GitHub here](https://seryckd.github.io/auto-battler/)
+
 This style of game is where the player sets up the game board and then the game
 auto plays it self based upon random numbers.
 

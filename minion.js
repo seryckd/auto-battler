@@ -1,4 +1,5 @@
 import { MinionDefs } from './minions-db.js'
+import { Skill } from './skill.js'
 export class Minion {
 
     static counter = 0;
@@ -9,9 +10,13 @@ export class Minion {
         this.portrait = MinionDefs[id].portrait;
         this.attack = MinionDefs[id].attack;
         this.health = MinionDefs[id].health;
-        this.skills = Array.from(MinionDefs[id].skills);
+        this.skills = Array
+            .from(MinionDefs[id].skills)
+            .map(s => Skill.factory(s));
         this.id = Minion.counter++;
     }
+
+    
 
     getId() {
         return this.id;
@@ -33,12 +38,19 @@ export class Minion {
         return this.attack;
     }
 
+    /**
+     * An array of Skill objects
+     * @returns {Array}
+     */
     getSkills() {
         return this.skills;
     }
 
     hasSkill(skill) {
-        return this.skills[skill] !== undefined;
+        let sl = this.skills.filter(s => {
+            return s.getName() == skill;
+        });
+        return sl.length > 0;
     }
 
     isDead() {
