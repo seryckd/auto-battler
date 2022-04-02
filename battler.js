@@ -1,33 +1,27 @@
 
-import { Player } from './player.js'
-import { BattleScript } from './script.js'
+import { Context } from './context.js';
+import { BattleScript } from './transcript.js'
 import { randomInt } from './utils.js'
 
 export class Battler {
 
     constructor(p1, p2) {
         this.players = [ p1, p2 ]
-        this.activeSkills = new Map();
     }
 
     battle() {
 
-        this.activeSkills.clear();
-        this.players.forEach(p => {
-            p.reset();
-            p.getStartingMinions().forEach(m => {
-                this.addMinion(p, m);
-            });
-        });
+        this.bs = new BattleScript();
 
-        this.bs = new BattleScript(
-            this.players[0], this.players[0].getMinions(), 
-            this.players[1], this.players[1].getMinions())
+        this.contexts = [ 
+            new Context(this.players[0], this.bs),
+            new Context(this.players[1], this.bs)
+        ];
 
         const startPlayer = randomInt(2);
 
-        let attackPlayer = this.players[startPlayer];
-        let defendPlayer = this.players[1-startPlayer];
+        let attackPlayer = this.contexts[startPlayer];
+        let defendPlayer = this.contexts[1-startPlayer];
 
         while(attackPlayer.hasMinions() && defendPlayer.hasMinions())
         {
@@ -37,7 +31,7 @@ export class Battler {
 
             console.log(possibleDefenders);
 
-            let skills = this.getSkills(defendPlayer, 'choose-defender');
+            let skills = defendPlayer.getSkills('choose-defender');
 
             if (skills.length > 0) {
                 possibleDefenders = skills[0].execute(possibleDefenders);
@@ -47,17 +41,17 @@ export class Battler {
 
             let defendMinion = possibleDefenders[randomInt(possibleDefenders.length)];
             let defendSlot = defendPlayer.getSlot(defendMinion);
-            let attackSlot = randomInt(attackPlayer.numPositions());
-            let attackMinion = attackPlayer.getMinionAtPosition(attackSlot);
+            let attackSlot = randomInt(attackPlayer.filledSlots());
+            let attackMinion = attackPlayer.getMinionAtSlot(attackSlot);
 
             this.combat(attackPlayer, attackSlot, attackMinion, 
                 defendPlayer, defendSlot, defendMinion);
     
             if (attackMinion.isDead()) {
-                this.removeMinion(attackPlayer, attackMinion);
+                attackPlayer.removeMinion(attackMinion);
             }
             if (defendMinion.isDead()) {
-                this.removeMinion(defendPlayer, defendMinion);
+                defendPlayer.removeMinion(defendMinion);
             }
 
             let tmp = attackPlayer;
@@ -74,42 +68,6 @@ export class Battler {
         return JSON.stringify(this.bs.fetchScript());
     }
 
-    addMinion(player, id) {
-        let minion = player.addMinion(id);
-        minion.getSkills().forEach(s => this.registerSkill(player, s));
-    }
-
-    removeMinion(player, minion) {
-        this.bs.removeMinion(minion);
-        player.removeMinion(minion);
-        minion.getSkills().forEach(s => this.unRegisterSkill(player, s));
-    }
-
-    getSkills(player, phase) {
-        let list = this.activeSkills.get(player.getName() + "_" + phase);
-
-        if (list === undefined) {
-            list = [];
-        }
-        return list;
-    }
-
-    registerSkill(player, skill) {   
-        const phase = player.getName() + "_" + skill.getPhase();
-        let list = this.activeSkills.get(phase);
-        if (list === undefined) {
-            list = [];
-            this.activeSkills.set(phase, list);
-        }
-        list.push(skill);
-    }
-
-    unRegisterSkill(player, skill) {
-        const phase = player.getName() + "_" + skill.getPhase();
-        let list = this.activeSkills.get(phase);
-        list.splice(list.indexOf(skill), 1);
-    }
-
     combat(attackPlayer, attackSlot, attackMinion, defendPlayer, defendSlot, defendMinion) {
 
         this.bs.startCombat();
@@ -123,6 +81,7 @@ export class Battler {
         this.bs.addAttack(attackMinion, defendMinion);
 
         let damage = attackMinion.getAttack();
+
         defendMinion.takeDamage(damage);
         this.bs.addChange(defendMinion, "health", defendMinion.getHealth());
 

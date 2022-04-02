@@ -16,8 +16,6 @@ export class Minion {
         this.id = Minion.counter++;
     }
 
-    
-
     getId() {
         return this.id;
     }

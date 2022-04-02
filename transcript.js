@@ -3,13 +3,11 @@ import { Minion } from './minion.js'
 
 
 export class BattleScript {
-    constructor(p1, mins1, p2, mins2) {
+    constructor() {
         this.script = {
             players: [],
             combat: []
         };
-        this.addPlayer(p1, mins1);
-        this.addPlayer(p2, mins2);
         this.combat = null;
     }
 

@@ -44,3 +44,22 @@ class WallSkill extends Skill {
         });
     }
 }
+
+class ShieldSkill extends Skill {
+
+    constructor() {
+        super('shield', 'calc-damage');
+    }
+
+    /**
+     * 
+     * @param {*} amount of damage
+     */
+    execute(damage) {
+
+        // 
+
+        // all damage is abosrbed by the shield
+        return 0;
+    }
+}
