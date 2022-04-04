@@ -44,9 +44,16 @@ export class Minion {
         return this.skills;
     }
 
-    hasSkill(skill) {
+    loseSkill(name) {
+        let idx = this.skills.findIndex(s => s.getName() == name);
+        if (idx !== -1) {
+            this.skills.splice(idx, 1);
+        }
+    }
+
+    hasSkill(name) {
         let sl = this.skills.filter(s => {
-            return s.getName() == skill;
+            return s.getName() == name;
         });
         return sl.length > 0;
     }

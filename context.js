@@ -25,7 +25,7 @@ export class Context {
         let min = new Minion(id);
         this.slots.push(min);
 
-        this.registerSkills(min.getSkills());
+        this.registerSkills(min.getSkills(), min);
 
         return min;
     }
@@ -85,6 +85,13 @@ export class Context {
         return (list === undefined) ? [] : list;
     }
 
+    loseMinionSkill(minion, skill) {
+        console.log("lose skill:%s minion:%s", skill.getName(), minion.getId());
+        minion.loseSkill(name);
+        this.unregisterSkills([skill]);
+        this.script.loseSkill(minion, skill.getName());
+    }
+
     log() {
         console.groupCollapsed("player: %s, minions: %s", this.player.getName(), this.slots.length);
         this.slots.forEach((p, i) => console.log("%d %o", i, p));
@@ -95,8 +102,10 @@ export class Context {
      * private
      * @param {*} skills 
      */
-    registerSkills(skills) {
+    registerSkills(skills, minion) {
         skills.forEach(skill => {            
+            skill.bind(this, minion);
+
             let list = this.skills.get(skill.getPhase());
             if (list === undefined) {
                 list = [];
@@ -111,9 +120,12 @@ export class Context {
      * @param {*} skills 
      */
     unregisterSkills(skills) {
+
         skills.forEach(skill => {
             let list = this.skills.get(skill.getPhase());
-            list.splice(list.indexOf(skill), 1);    
+            list.splice(
+                list.findIndex(s => s.isEqual(skill)), 
+                1);
         });
     }
 
