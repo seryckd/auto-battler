@@ -3,13 +3,12 @@ export class Viewer {
     constructor(scriptObj) {
         this.tray1 = scriptObj.players[0];
         this.tray2 = scriptObj.players[1];
-        this.combat = scriptObj.combat;
+        this.turns = scriptObj.turns;
 
         this.setup(this.tray1.minions, 'tray1');
         this.setup(this.tray2.minions, 'tray2');
 
         this.turnCount = -1;
-        this.actionCount = 0;
         this.actionContext = {};
     }
 
@@ -20,36 +19,36 @@ export class Viewer {
         });
     }
 
-    play(playCallback) {
+    play(onEndPlayFn) {
         const self = this;
-        this.playCallback = playCallback;
+         
+        this.onEndPlayFn = onEndPlayFn;
 
-        function turnFinish(isEnd) {
+        let onEndTurnFn = (isEnd) => {
             if (!isEnd) {
-                self.turn(turnFinish);
+                self.nextTurn(onEndTurnFn);
             } else {
-                self.playCallback();
+                self.onEndPlayFn();
             }
         }
 
-        this.turn(turnFinish);
+        this.nextTurn(onEndTurnFn);        
     }
 
-    turn(turnCallback) {
+    nextTurn(onFinishFn) {
         const self = this;
 
         this.turnCount++;
-        this.turnCallback = turnCallback;
+        this.onFinishFn = onFinishFn;
 
-        if (this.turnCount >= this.combat.length) {
-            this.turnCallback(true);
+        if (this.turnCount >= this.turns.length) {
+            this.onFinishFn(true);
             return;
         }
 
-        this.actionCount = -1;
         this.actionContext = {};
 
-        let action = this.combat[this.turnCount].changes[0];
+        let action = this.turns[this.turnCount][0];
 
         this.actionContext.minion = document.getElementById(this.makeDomId(action.id));
         console.assert(this.actionContext.minion != null, 
@@ -59,7 +58,7 @@ export class Viewer {
         console.assert(this.actionContext.minion != null, 
             "Target Minion %d not in dom", action.targetId);
 
-        console.log("start turn action=%o, min=%o", action, this.actionContext.minion);
+        console.log("start turn %i action=%o, min=%o", this.turnCount, action, this.actionContext.minion);
 
         this.actionContext.delta = this.deltaToTarget(
             this.actionContext.minion,
@@ -85,15 +84,13 @@ export class Viewer {
             'end': 'remove'
         }
 
-        let actions = this.combat[this.turnCount]
-            .changes
+        let actions = this.turns[this.turnCount]
             .filter(action => action.action === typeMap[type]);
 
-        console.log("Turn: %i, Action: %s, Actions: %o, Changes:%o",
+        console.log("Turn: %i, Action: %s, Actions: %o",
             this.turnCount, 
             type, 
-            actions, 
-            this.combat[this.turnCount].changes
+            actions 
             );
 
         switch(type) {
@@ -102,12 +99,21 @@ export class Viewer {
                 let anim = null;
                 actions.forEach((action, index) => {
                     const minion = document.getElementById(this.makeDomId(action.id));
-                    const attr = minion.getElementsByClassName(action.stat)[0];
-                    anim = this.damageAnimation(attr, action.value);
+
+                    if (action.type === 'stat') {
+                        const attr = minion.getElementsByClassName(action.stat)[0];
+                        anim = this.damageAnimation(attr, action.value);
+                    } else {
+                        minion.classList.remove(action.skill);
+                    }
                 });
-                anim.onfinish = function() {
+                if (anim != null) {
+                    anim.onfinish = function() {
+                        self.action('remove');
+                    };
+                } else {
                     self.action('remove');
-                };
+                }
                 break;
             }
 
@@ -138,7 +144,7 @@ export class Viewer {
                     this.actionContext.delta.dX, 
                     this.actionContext.delta.dY)
                     .onfinish = function() {
-                        self.turnCallback(false);
+                        self.onFinishFn(false);
                     }
                 break;
             }
@@ -154,11 +160,16 @@ export class Viewer {
         let min = document.createElement('div');
         min.classList.add('minion');
 
+        min.classList.add('base');
+
         if (minion.skills.find(e => e === 'wall')) {
             min.classList.add('wall');
-        } else {
-            min.classList.add('base');
         }
+
+        if (minion.skills.find(e => e === 'shield')) {
+            min.classList.add('shield');
+        }
+
         min.id = this.makeDomId(minion.id);
 
         min.innerHTML = `

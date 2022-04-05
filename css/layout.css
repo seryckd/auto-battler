@@ -59,3 +59,6 @@
     border-radius: 10%;
     border: 1px solid;
 }
+.minion.shield {
+    box-shadow: 0 0 6px 10px rgba(204,65,37,1);
+}

@@ -3,17 +3,30 @@ import { Minion } from './minion.js'
 
 
 export class BattleScript {
-    constructor(p1, mins1, p2, mins2) {
+    constructor() {
         this.script = {
             players: [],
-            combat: []
+            turns: []
         };
-        this.addPlayer(p1, mins1);
-        this.addPlayer(p2, mins2);
-        this.combat = null;
+        this.turns = null;
+        this.actions = null;
     }
 
     fetchScript() {
+
+        // Clean up empty arrays before returning
+
+        const pruneEmpty = (array) => {
+            console.log("array=%o", array);
+            for (let i=array.length-1; i>=0; --i) {
+                if (array[i].length == 0) {
+                    array.splice(i, 1);
+                }
+            }
+        };
+
+        pruneEmpty(this.script.turns);
+
         return this.script;
     }
 
@@ -40,15 +53,13 @@ export class BattleScript {
         this.script.players.push(p);
     }
 
-    startCombat() {
-        this.combat = {
-            changes: []
-        }
-        this.script.combat.push(this.combat);
+    nextTurn() {
+        this.actions = [];
+        this.script.turns.push(this.actions);
     }
 
     addAttack(attacker, defender) {
-        this.combat.changes.push({
+        this.actions.push({
             action: 'attack',
             id: attacker.getId(),
             targetId: defender.getId()
@@ -56,18 +67,28 @@ export class BattleScript {
     }
 
     addChange(minion, stat, value) {
-        this.combat.changes.push({
+        this.actions.push({
             action: 'change',
             id: minion.getId(),
+            type: 'stat',
             stat: stat,
             value: value
         });
     }
 
     removeMinion(minion) {
-        this.combat.changes.push({
+        this.actions.push({
             action: 'remove',
             id: minion.getId()
+        });
+    }
+
+    loseSkill(minion, name) {
+        this.actions.push({
+            action: 'change',
+            id: minion.getId(),
+            type: 'lose',
+            skill: name
         });
     }
 }

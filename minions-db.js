@@ -4,7 +4,7 @@ export var MinionDefs = {
         'portrait': 'hydra',
         'attack': 1,
         'health': 1,
-        'skills': ['wall']
+        'skills': ['wall', 'shield']
     },
     '002': {
         'name': 'George the Medusa',
