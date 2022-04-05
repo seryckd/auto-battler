@@ -34,6 +34,8 @@ the technologies.  As usual this is vanilla Javascript that runs in the client.
   selected to attack and ends when all side effects are finished.
 - phase
   Each turn is split into phases
+- action
+  An action that occurs during the turn, such as a minion attacking.
 - player
   A player contains an ever changing set of minions in positions.
 - minion
@@ -191,3 +193,39 @@ combat: object, array
     changes: object, array
       player, minion, new health, new attack, attribute name, 
       
+# Transcript
+
+The outcome of the battle is written as a script which can be followed (or 'played')
+by the viewer.
+
+
+# Viewer
+
+The viewer doesn't have any game logic, it's job is to read the transcript and 
+play the actions that occured.
+
+Animations are used to make the playback visually entertaining. At this point the
+player has nothing to do except to watch and guess the outcome so the animations 
+do the heavy lifting of keeping engagement.
+
+## Actions
+
+For the viewer, actions are defined as
+
+* Attack
+  Animate a minion attacking a defending minion.
+
+* Change
+  A change to a minion that should be shown graphically.  This
+  could be changes to stats (like health) or the result of gaining
+  or losing a skill (such as 'shield').
+
+* Remove
+  Animate a minion being removed from the board.
+
+* Add
+  Animate a minion being added to the board.
+
+The transcript can give hints to the viewer on how to present the information,
+for instance by 'grouping' actions together that should occur at the same time.
+

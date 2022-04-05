@@ -49,7 +49,7 @@
          });
          document.getElementById('turn').addEventListener('click', event => {
             document.getElementById('turn').disabled = true;
-            viewer.turn(() => document.getElementById('turn').disabled = false);
+            viewer.nextTurn(() => document.getElementById('turn').disabled = false);
          });
          document.getElementById('restart').addEventListener('click', event => {
             document.getElementById('play').disabled = false;
