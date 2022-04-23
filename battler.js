@@ -1,6 +1,6 @@
 
 import { Context } from './context.js';
-import { BattleScript } from './transcript.js'
+import { BattleScript, PHASE } from './transcript.js'
 import { randomInt } from './utils.js'
 
 export class Battler {
@@ -28,6 +28,7 @@ export class Battler {
             console.log('start turn defendPlayer: %s', defendPlayer.getName());
 
             this.bs.nextTurn();
+            this.bs.nextPhase(PHASE.CHARGE);
 
             let possibleDefenders = this.applySkill(
                 'choose-defender',
@@ -43,6 +44,8 @@ export class Battler {
 
             this.combat(attackPlayer, attackSlot, attackMinion, 
                 defendPlayer, defendSlot, defendMinion);
+            
+            this.bs.nextPhase(PHASE.RESOLVE);
     
             if (attackMinion.isDead()) {
                 attackPlayer.removeMinion(attackMinion);
@@ -76,6 +79,7 @@ export class Battler {
         defendPlayer.log();
 
         this.bs.addAttack(attackMinion, defendMinion);
+        this.bs.nextPhase(PHASE.HIT);
 
         let damage = this.applySkill(
             'calc-damage',

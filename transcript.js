@@ -1,6 +1,11 @@
 import { Player } from './player.js'
 import { Minion } from './minion.js'
 
+export const PHASE = {
+    CHARGE: 'charge',
+    HIT: 'hit',
+    RESOLVE: 'resolve'
+};
 
 export class BattleScript {
     constructor() {
@@ -9,7 +14,8 @@ export class BattleScript {
             turns: []
         };
         this.turns = null;
-        this.actions = null;
+        this.phase = null;
+        this.phases = null;
     }
 
     fetchScript() {
@@ -54,12 +60,17 @@ export class BattleScript {
     }
 
     nextTurn() {
-        this.actions = [];
-        this.script.turns.push(this.actions);
+        this.phases = {};
+        this.script.turns.push(this.phases);
+    }
+
+    nextPhase(name) {
+        this.phase = [];
+        this.phases[name] = this.phase;
     }
 
     addAttack(attacker, defender) {
-        this.actions.push({
+        this.phase.push({
             action: 'attack',
             id: attacker.getId(),
             targetId: defender.getId()
@@ -67,7 +78,7 @@ export class BattleScript {
     }
 
     addChange(minion, stat, value) {
-        this.actions.push({
+        this.phase.push({
             action: 'change',
             id: minion.getId(),
             type: 'stat',
@@ -77,14 +88,14 @@ export class BattleScript {
     }
 
     removeMinion(minion) {
-        this.actions.push({
+        this.phase.push({
             action: 'remove',
             id: minion.getId()
         });
     }
 
     loseSkill(minion, name) {
-        this.actions.push({
+        this.phase.push({
             action: 'change',
             id: minion.getId(),
             type: 'lose',
