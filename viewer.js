@@ -9,7 +9,10 @@ export class Viewer {
         this.setup(this.tray2.minions, 'tray2');
 
         this.turnCount = -1;
-        this.actionContext = {};
+        this.attackContext = {};
+
+        this.phases = [ 'charge', 'hit', 'resolve' ];
+        this.phaseIdx = -1;
     }
 
     setup(minions, trayId) {
@@ -19,136 +22,179 @@ export class Viewer {
         });
     }
 
-    play(onEndPlayFn) {
+    playAllTurns(onPlayFinishFn) {
         const self = this;
          
-        this.onEndPlayFn = onEndPlayFn;
+        this.onPlayFinishFn = onPlayFinishFn;
+        this.onTurnFinishFn = self.nextTurn;
 
-        let onEndTurnFn = (isEnd) => {
-            if (!isEnd) {
-                self.nextTurn(onEndTurnFn);
-            } else {
-                self.onEndPlayFn();
-            }
-        }
+        this.turnCount = -1;
+        this.phaseIdx = -1;
 
-        this.nextTurn(onEndTurnFn);        
+        this.nextTurn();        
     }
 
-    nextTurn(onFinishFn) {
-        const self = this;
+    playNextTurn(onPlayFinishFn) {
+        this.onPlayFinishFn = onPlayFinishFn;
+        this.onTurnFinishFn = onPlayFinishFn;
 
+        this.nextTurn();
+    }
+
+    nextTurn() {
         this.turnCount++;
-        this.onFinishFn = onFinishFn;
 
         if (this.turnCount >= this.turns.length) {
-            this.onFinishFn(true);
+            console.log('All Turns Finished');
+            this.onPlayFinishFn();
             return;
         }
 
-        this.actionContext = {};
+        this.nextPhase();
+    }
 
-        let action = this.turns[this.turnCount][0];
+    nextPhase() {
+        const self = this;
+        let animations = [];
+        let phaseName = this.phaseName();
+        console.log('Turn: %s, Phase: %s', this.turnCount, phaseName);
 
-        this.actionContext.minion = document.getElementById(this.makeDomId(action.id));
-        console.assert(this.actionContext.minion != null, 
-            "Minion %d not in dom", action.id);
+        switch(phaseName) {
+            case 'charge': {
+                animations = this.createAnimations('charge');
+                break;
+            }
+            case 'hit': {
+                animations = this.createAnimations('hit');
+                break;
+            }
+            case 'resolve': {
+                animations = this.createAnimations('resolve');
 
-        let targetMinion = document.getElementById(this.makeDomId(action.targetId));
-        console.assert(this.actionContext.minion != null, 
-            "Target Minion %d not in dom", action.targetId);
+                // retreat animation
+                animations.push(
+                    this.retreatAnimation(
+                        this.attackContext.minion, 
+                        this.attackContext.delta.dX, 
+                        this.attackContext.delta.dY)
+                );
+                break;
+            }
+            case 'end': {
+                this.onTurnFinishFn();
+                return;
+            }
+            default: {
+                console.assert(true, 'Unknown phase %s', phaseName);
+            }
+        }
 
-        console.log("start turn %i action=%o, min=%o", this.turnCount, action, this.actionContext.minion);
+        let lastAnim = animations.pop();
+        if (lastAnim !== undefined) {
+            let existingOnFinish = lastAnim.onfinish;
+            lastAnim.onfinish = function() {
+                if (existingOnFinish !== null) {
+                    existingOnFinish();
+                }
+                self.nextPhase();
+            }
+        } else {
+            this.nextPhase();
+        }
+    }
 
-        this.actionContext.delta = this.deltaToTarget(
-            this.actionContext.minion,
+    createAnimations(scriptPhase) {
+
+        let animations = [];
+
+        let actions = this.turns[this.turnCount][scriptPhase];
+
+        actions.forEach(a => {
+            switch(a.action) {
+                case 'attack': {
+                    console.log('Action: attack, id:%s, targetId:%s', a.id, a.targetId);
+                    animations.push(this.actionAttack(a));
+                    break;
+                }
+                case 'change': {
+                    animations.push(this.actionChange(a));
+                    break;
+                }
+                case 'remove': {
+                    animations.push(this.actionRemove(a));
+                    break;
+                }
+                default: {
+                    console.assert(true, 'Unknown action %s', a.action);
+                }
+            }
+        });
+
+        return animations.filter(a => a !== null);
+    }
+
+    actionAttack(action) {
+        let minion = this.minionById(action.id);
+        let targetMinion = this.minionById(action.targetId)
+
+        let delta = this.deltaToTarget(
+            minion,
             targetMinion
             );
 
-        this.attackAnimation(
-            this.actionContext.minion, 
-            this.actionContext.delta.dX, 
-            this.actionContext.delta.dY)
-            .onfinish = function() {
-                self.action('change');
-            };
+        this.attackContext = {
+            minion: minion,
+            delta: {
+                dX: delta.dX,
+                dY: delta.dY
+            }
+        };
+
+        return this.attackAnimation(
+            minion, 
+            delta.dX, 
+            delta.dY);
     }
 
-    action(type) {
+    actionChange(action) {
+        let minion = this.minionById(action.id);
+
+        if (action.type === 'stat') {
+            const attr = minion.getElementsByClassName(action.stat)[0];
+            return this.damageAnimation(attr, action.value);
+        } else {
+            minion.classList.remove(action.skill);
+            return null;
+        }
+    }
+
+    actionRemove(action) {
         const self = this;
+        const minion = this.minionById(action.id);
+        let anim = this.deadAnimation(minion);
 
-        const typeMap = {
-            'attack': 'attack',
-            'change': 'change',
-            'remove': 'remove',
-            'end': 'remove'
+        anim.onfinish = function() {
+            document
+                .getElementById(self.makeDomId(action.id))
+                .remove();
+        };        
+    }
+
+    phaseName() {
+        this.phaseIdx++;
+        if (this.phaseIdx < this.phases.length) {
+            return this.phases[this.phaseIdx];
         }
+        this.phaseIdx = -1;
+        return 'end';
+    }
 
-        let actions = this.turns[this.turnCount]
-            .filter(action => action.action === typeMap[type]);
+    minionById(id) {
+        return document.getElementById(this.makeDomId(id));
+    }
 
-        console.log("Turn: %i, Action: %s, Actions: %o",
-            this.turnCount, 
-            type, 
-            actions 
-            );
-
-        switch(type) {
-
-            case 'change': {
-                let anim = null;
-                actions.forEach((action, index) => {
-                    const minion = document.getElementById(this.makeDomId(action.id));
-
-                    if (action.type === 'stat') {
-                        const attr = minion.getElementsByClassName(action.stat)[0];
-                        anim = this.damageAnimation(attr, action.value);
-                    } else {
-                        minion.classList.remove(action.skill);
-                    }
-                });
-                if (anim != null) {
-                    anim.onfinish = function() {
-                        self.action('remove');
-                    };
-                } else {
-                    self.action('remove');
-                }
-                break;
-            }
-
-            case 'remove': {
-                if (actions.length === 0) {
-                    self.action('end');
-                    return;
-                }
-                let anim = null;
-                actions.forEach(action => {
-                    const minion = document.getElementById(this.makeDomId(action.id));
-                    anim = this.deadAnimation(minion);
-                });
-                anim.onfinish = function() {
-                    actions.forEach(action => {
-                        document
-                            .getElementById(self.makeDomId(action.id))
-                            .remove();
-                    });
-                    self.action('end');
-                };
-                break;
-            }
-
-            case 'end': {
-                this.retreatAnimation(
-                    this.actionContext.minion, 
-                    this.actionContext.delta.dX, 
-                    this.actionContext.delta.dY)
-                    .onfinish = function() {
-                        self.onFinishFn(false);
-                    }
-                break;
-            }
-        }
+    elementsByClassName(root, className) {
+        return root.getElementsByClassName(className);
     }
 
     makeDomId(id) {
@@ -188,6 +234,7 @@ export class Viewer {
     deltaToTarget(sourceMin, targetMin) {
 
         const info = function(min) {
+            console.assert(min !== null, 'null minion');
             const r = min.getBoundingClientRect();
             return {
                 x: r.left + r.width/2,
@@ -287,7 +334,7 @@ export class Viewer {
         });
     }
 
-    cleanAll() {
+    restartPlay() {
         // Returns a 'live' HTMLCollection (not an array)
         // Copy it so 
         //    1) we can use forEach 2
@@ -295,6 +342,9 @@ export class Viewer {
         Array
             .from(document.getElementsByClassName('minion'))
             .forEach(e => e.remove());
+
+        this.turnCount = -1;
+        this.phaseIdx = -1;
     }
 }
 

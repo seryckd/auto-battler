@@ -45,16 +45,16 @@
 
          document.getElementById('play').addEventListener('click', event => {
             document.getElementById('play').disabled = true;
-            viewer.play(() => document.getElementById('play').disabled = false);
+            viewer.playAllTurns(() => document.getElementById('play').disabled = false);
          });
          document.getElementById('turn').addEventListener('click', event => {
             document.getElementById('turn').disabled = true;
-            viewer.nextTurn(() => document.getElementById('turn').disabled = false);
+            viewer.playNextTurn(() => document.getElementById('turn').disabled = false);
          });
          document.getElementById('restart').addEventListener('click', event => {
             document.getElementById('play').disabled = false;
-            document.getElementById('turn').disabled = true;
-            viewer.cleanAll();
+            document.getElementById('turn').disabled = false;
+            viewer.restartPlay();
             viewer = new Viewer(JSON.parse(engine.battle()));
          });
       </script>
