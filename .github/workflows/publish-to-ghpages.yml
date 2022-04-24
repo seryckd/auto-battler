@@ -1,9 +1,10 @@
-# This is a basic workflow that is manually triggered
 
-name: Publish to gh-pages
+name: Publish to gh-pages on merge
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - master
 
 jobs:
   merge:
