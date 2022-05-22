@@ -5,14 +5,16 @@ export class Minion {
     static counter = 0;
 
     constructor(id) {
+        const self = this;
         this.defId = id;
         this.name = MinionDefs[id].name;
         this.portrait = MinionDefs[id].portrait;
         this.attack = MinionDefs[id].attack;
         this.health = MinionDefs[id].health;
+
         this.skills = Array
             .from(MinionDefs[id].skills)
-            .map(s => Skill.factory(s));
+            .map(s => Skill.factory(s, self));
         this.id = Minion.counter++;
     }
 

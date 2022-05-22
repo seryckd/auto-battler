@@ -1,17 +1,32 @@
 
 import { Context } from './context.js';
-import { BattleScript, PHASE } from './transcript.js'
+import { BattleScript, TRANSCRIPT_PHASE } from './transcript.js'
 import { randomInt } from './utils.js'
 
+/**
+ * Battle Engine. Executes a battle between two players and outputs
+ * the result to a BattleScript.
+ */
+
+export const BATTLE_PHASE = {
+    CHOOSE_DEFENDER: 'choose-defender',
+    CALC_DAMAGE: 'calc-damage',
+    MINION_DEATH: 'minion-death'
+};
 export class Battler {
 
     constructor(p1, p2) {
-        this.players = [ p1, p2 ]
+        this.players = [ p1, p2 ];
+
+        this.contexts = [];
+        this.attackPlayer = {};
+        this.defendPlayer = {};
     }
 
     battle() {
 
         this.bs = new BattleScript();
+        this.actionQueue = [];
 
         this.contexts = [ 
             new Context(this.players[0], this.bs),
@@ -20,46 +35,32 @@ export class Battler {
 
         const startPlayer = randomInt(2);
 
-        let attackPlayer = this.contexts[startPlayer];
-        let defendPlayer = this.contexts[1-startPlayer];
+        this.attackPlayer = this.contexts[startPlayer];
+        this.defendPlayer = this.contexts[1-startPlayer];
 
-        while(attackPlayer.hasMinions() && defendPlayer.hasMinions())
+        while(this.attackPlayer.hasMinions() && this.defendPlayer.hasMinions())
         {
-            console.log('start turn defendPlayer: %s', defendPlayer.getName());
+            console.log('start turn defendPlayer: %s', this.defendPlayer.getName());
 
             this.bs.nextTurn();
-            this.bs.nextPhase(PHASE.CHARGE);
+            this.bs.nextPhase(TRANSCRIPT_PHASE.CHARGE);
 
-            let possibleDefenders = this.applySkill(
-                'choose-defender',
-                defendPlayer,
-                defendPlayer.getMinions(),
-                null
-            );
+            this.addAction('prepare', (battle) => {battle.prepareAction()})
 
-            let defendMinion = possibleDefenders[randomInt(possibleDefenders.length)];
-            let defendSlot = defendPlayer.getSlot(defendMinion);
-            let attackSlot = randomInt(attackPlayer.filledSlots());
-            let attackMinion = attackPlayer.getMinionAtSlot(attackSlot);
+            while(this.actionQueue.length > 0) {
+                let action = this.actionQueue.shift();
 
-            this.combat(attackPlayer, attackSlot, attackMinion, 
-                defendPlayer, defendSlot, defendMinion);
-            
-            this.bs.nextPhase(PHASE.RESOLVE);
-    
-            if (attackMinion.isDead()) {
-                attackPlayer.removeMinion(attackMinion);
-            }
-            if (defendMinion.isDead()) {
-                defendPlayer.removeMinion(defendMinion);
+                console.log('action: %s', action.name);
+                
+                action.callback(this);
             }
 
-            let tmp = attackPlayer;
-            attackPlayer = defendPlayer;
-            defendPlayer = tmp;
+            let tmp = this.attackPlayer;
+            this.attackPlayer = this.defendPlayer;
+            this.defendPlayer = tmp;
         }
 
-        let winner = attackPlayer.hasMinions() ? attackPlayer : defendPlayer;
+        let winner = this.attackPlayer.hasMinions() ? this.attackPlayer : this.defendPlayer;
         
         console.log('winner %o', winner);
 
@@ -70,45 +71,75 @@ export class Battler {
         return str;
     }
 
-    combat(attackPlayer, attackSlot, attackMinion, defendPlayer, defendSlot, defendMinion) {
+    prepareAction() {
+        let possibleDefenders = this.applySkill(
+            BATTLE_PHASE.CHOOSE_DEFENDER,
+            this.defendPlayer,
+            this.defendPlayer.getMinions(),
+            null
+        );
 
-        console.log("start combat defendPlayer:%s, attackSlot:%i, defendSlot:%i",
-            defendPlayer.getName(), attackSlot, defendSlot);
+        let defendMinion = possibleDefenders[randomInt(possibleDefenders.length)];
+        let defendSlot = this.defendPlayer.getSlot(defendMinion);
 
-        attackPlayer.log();
-        defendPlayer.log();
+        let attackSlot = randomInt(this.attackPlayer.filledSlots());
+        let attackMinion = this.attackPlayer.getMinionAtSlot(attackSlot);
+
+        this.addAction('attack', (battle) => {
+            battle.attackAction(defendSlot, defendMinion, attackSlot, attackMinion)
+        })
+    }
+
+    attackAction(defendSlot, defendMinion, attackSlot, attackMinion) {
+        // not implemented yet, passthru to combat
+        this.addAction('combat', (battle) => {
+            battle.combatAction(defendSlot, defendMinion, attackSlot, attackMinion);
+        })
+    }
+
+    combatAction(defendSlot, defendMinion, attackSlot, attackMinion) {
+
+        console.log("combat defendPlayer:%s, attackSlot:%i, defendSlot:%i",
+            this.defendPlayer.getName(), attackSlot, defendSlot);
+
+        this.attackPlayer.log();
+        this.defendPlayer.log();
 
         this.bs.addAttack(attackMinion, defendMinion);
-        this.bs.nextPhase(PHASE.HIT);
+        this.bs.nextPhase(TRANSCRIPT_PHASE.HIT);
 
-        let damage = this.applySkill(
-            'calc-damage',
-            defendPlayer,
-            attackMinion.getAttack(),
-            defendMinion
+        this.addAction('applyDamage', (battle) => {
+            battle.applyDamageAction(
+                this.attackPlayer, attackSlot, attackMinion, defendMinion.getAttack())
+        });
+
+        this.addAction('applyDamage', (battle) => {
+            battle.applyDamageAction(
+                this.defendPlayer, defendSlot, defendMinion, attackMinion.getAttack())
+        });
+    }
+
+    applyDamageAction(player, slot, minion, reqestedDamage) {
+
+        let actualDamage = this.applySkill(
+            BATTLE_PHASE.CALC_DAMAGE,
+            player,
+            reqestedDamage,
+            minion
             );
 
-        if (damage > 0) {
-            defendMinion.takeDamage(damage);
-            this.bs.addChange(defendMinion, "health", defendMinion.getHealth());
+        if (actualDamage > 0) {
+            minion.takeDamage(actualDamage);
+
+            this.bs.nextPhase(TRANSCRIPT_PHASE.RESOLVE);
+            this.bs.addChange(minion, "health", minion.getHealth());
+
+            if (minion.isDead()) {
+                this.addAction('removeMinion', (battle) => {
+                    player.removeMinion(minion);
+                });
+            }
         }
-
-        damage = this.applySkill(
-            'calc-damage',
-            attackPlayer,
-            defendMinion.getAttack(),
-            attackMinion
-        );
-        
-        if (damage > 0) {
-            attackMinion.takeDamage(damage);
-            this.bs.addChange(attackMinion, "health", attackMinion.getHealth());
-        }
-
-        console.log('state after combat');
-        attackPlayer.log();
-        defendPlayer.log();
-
     }
 
     applySkill(phase, context, value, target) {
@@ -123,4 +154,16 @@ export class Battler {
         return value;
     }
 
+    addAction(name, fn) {
+        this.actionQueue.push({
+            name: name,
+            callback: fn
+        });
+    }
+
+    /*
+    addImmediateAction(fn) {
+        this.actionQueue.unshift(fn);
+    }
+    */
 }

@@ -1,7 +1,24 @@
 import { Player } from './player.js'
 import { Minion } from './minion.js'
 
-export const PHASE = {
+/**
+ * The battler script comprises of
+ * 
+ * Player Information
+ * 
+ * Starting Board Information
+ * 
+ * Turns
+ * A turn comprises of
+ * 1) selecting of attacker & defender
+ * 2) changes to minions that occur as a result of combat
+ * 3) changes to the board as a result of combat
+ */
+
+/**
+ * The phases of a turn 
+ */
+export const TRANSCRIPT_PHASE = {
     CHARGE: 'charge',
     HIT: 'hit',
     RESOLVE: 'resolve'

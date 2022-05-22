@@ -1,17 +1,25 @@
+import { BATTLE_PHASE } from './battler.js'
 
 export class Skill {
 
-    constructor(name, phase) {
+    constructor(name, phase, minion) {
         this.name = name;
         this.phase = phase;
+        this.minion = minion;
     }
 
-    static factory(name) {
-        switch(name) {
-            case 'wall': return new WallSkill();
-            case 'shield': return new ShieldSkill();
-            default: return undefined;
-        }
+    static registry = {}
+
+    static register(skill, ctor) {
+        Skill.registry[skill] = ctor;
+    }
+
+    static factory(name, minion) {
+        let ctor = Skill.registry[name];
+
+        console.assert(ctor !== undefined, "Unknown skill '%s'", name);
+
+        return new ctor(minion);
     }
 
     getName() {
@@ -22,9 +30,8 @@ export class Skill {
         return this.phase;
     }
 
-    bind(context, minion) {
+    bind(context) {
         this.context = context;
-        this.minion = minion;
     }
 
     doesApply(minion) {
@@ -54,8 +61,10 @@ export class Skill {
 
 class WallSkill extends Skill {
 
-    constructor() {
-        super('wall', 'choose-defender');
+    static NAME = 'wall';
+
+    constructor(minion) {
+        super(WallSkill.NAME, BATTLE_PHASE.CHOOSE_DEFENDER, minion);
     }
 
     /**
@@ -66,15 +75,16 @@ class WallSkill extends Skill {
         // remove any that do not have wall
 
         return minions.filter(m => {
-            return m.hasSkill("wall")
+            return m.hasSkill(WallSkill.NAME)
         });
     }
 }
-
 class ShieldSkill extends Skill {
 
-    constructor() {
-        super('shield', 'calc-damage');
+    static NAME = 'shield';
+
+    constructor(minion) {
+        super(ShieldSkill.NAME, BATTLE_PHASE.CALC_DAMAGE, minion);
     }
 
     /**
@@ -82,11 +92,47 @@ class ShieldSkill extends Skill {
      * @param {*} amount of damage
      */
      execute(damage) {
+        let ctx = this.context;
+        let min = this.minion;
+        let self = this;
 
-        // The skill disappears after use
-        this.context.loseMinionSkill(this.minion, this);
+        /*
+        this.engine.pushAction(function() {
+            // The skill disappears after use
+            ctx.loseMinionSkill(min, self);
+        });
+        */
+        ctx.loseMinionSkill(min, self);
 
         // all damage is abosrbed by the shield
         return 0;
     }
 }
+
+class SummonSkill extends Skill {
+
+    static NAME = 'summon';
+
+    constructor(minion) {
+        super(SummonSkill.NAME, BATTLE_PHASE.MINION_DEATH, minion);
+    }
+
+    /**
+     * 
+     * @param {array} actionStack array of actions
+     */
+    execute(actionStack) {
+        console.log('summon skill');
+        /*
+        actionStack.push({
+            context: this.context,
+            minionId: '004'
+        });
+        */
+        this.context.addMinionId('004');
+    }
+}
+
+Skill.register(WallSkill.NAME, WallSkill);
+Skill.register(SummonSkill.NAME, SummonSkill);
+Skill.register(ShieldSkill.NAME, ShieldSkill);

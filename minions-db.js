@@ -9,8 +9,8 @@ export var MinionDefs = {
     '002': {
         'name': 'George the Medusa',
         'portrait': 'medusa-head',
-        'attack': 3,
-        'health': 4,
+        'attack': 2,
+        'health': 2,
         'skills': []
     },
     '003': {
@@ -19,5 +19,12 @@ export var MinionDefs = {
         'attack': 3,
         'health': 4,
         'skills': []
-    }
+    },
+    '004': {
+        'name': 'Fish stick',
+        'portrait': 'piranha',
+        'attack': 2,
+        'health': 2,
+        'skills': []
+    }    
 };

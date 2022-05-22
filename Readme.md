@@ -193,6 +193,20 @@ combat: object, array
     changes: object, array
       player, minion, new health, new attack, attribute name, 
       
+engine
+
+
+context
+  has minions
+
+minion
+  has skills
+
+skill
+  may create actions
+
+
+
 # Transcript
 
 The outcome of the battle is written as a script which can be followed (or 'played')
@@ -228,4 +242,35 @@ For the viewer, actions are defined as
 
 The transcript can give hints to the viewer on how to present the information,
 for instance by 'grouping' actions together that should occur at the same time.
+
+
+------
+
+queue
+actions are added to the end of queue
+immediate actions are added to the front of the queue
+
+skills are not added to the queue, the stat changes are
+
+
+prepare
+select attacker and defender
+push attack
+
+attack
+apply effects to minions of both sides
+push changes (e.g. apply health to certain minions)
+push combat
+
+combat
+resolve combat for both minions
+push stat changes
+
+stat change
+push death
+push other stat changes
+
+death
+push summon
+push other stat changes
 

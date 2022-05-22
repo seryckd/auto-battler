@@ -1,5 +1,8 @@
 import { Minion } from "./minion.js";
 
+/**
+ * Information about a player and their minsions during a battle. 
+ */
 export class Context {
 
     constructor(player, script) {
@@ -104,7 +107,7 @@ export class Context {
      */
     registerSkills(skills, minion) {
         skills.forEach(skill => {            
-            skill.bind(this, minion);
+            skill.bind(this);
 
             let list = this.skills.get(skill.getPhase());
             if (list === undefined) {
