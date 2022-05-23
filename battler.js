@@ -1,5 +1,6 @@
 
 import { Context } from './context.js';
+import { SKILL_TYPE } from './skill.js';
 import { BattleScript, TRANSCRIPT_PHASE } from './transcript.js'
 import { randomInt } from './utils.js'
 
@@ -72,11 +73,10 @@ export class Battler {
     }
 
     prepareAction() {
-        let possibleDefenders = this.applySkill(
-            BATTLE_PHASE.CHOOSE_DEFENDER,
+
+        let possibleDefenders = this.filterDefenders(
             this.defendPlayer,
-            this.defendPlayer.getMinions(),
-            null
+            this.defendPlayer.getMinions()
         );
 
         let defendMinion = possibleDefenders[randomInt(possibleDefenders.length)];
@@ -99,8 +99,8 @@ export class Battler {
 
     combatAction(defendSlot, defendMinion, attackSlot, attackMinion) {
 
-        console.log("combat defendPlayer:%s, attackSlot:%i, defendSlot:%i",
-            this.defendPlayer.getName(), attackSlot, defendSlot);
+        console.log("combat defendPlayer:%s, attackSlot:%i, defendSlot:%i, attackMinion: %s, defendMinion: %s",
+            this.defendPlayer.getName(), attackSlot, defendSlot, attackMinion.toString(), defendMinion.toString());
 
         this.attackPlayer.log();
         this.defendPlayer.log();
@@ -121,11 +121,10 @@ export class Battler {
 
     applyDamageAction(player, slot, minion, reqestedDamage) {
 
-        let actualDamage = this.applySkill(
-            BATTLE_PHASE.CALC_DAMAGE,
+        let actualDamage = this.modifyDamage(
             player,
-            reqestedDamage,
-            minion
+            minion,
+            reqestedDamage
             );
 
         if (actualDamage > 0) {
@@ -142,17 +141,63 @@ export class Battler {
         }
     }
 
-    applySkill(phase, context, value, target) {
-        let skills = context.getSkills(phase);
+    removeMinionSkill(minion, skill) {
+        console.log("lose skill:%s minion:%s", skill.getName(), minion.getId());
+        minion.loseSkill(skill.getName());
+        this.bs.loseSkill(minion, skill.getName());
+    }
 
-        skills = skills.filter(s => s.doesApply(target));
+    // ------------------------------------------------------------------------
 
-        if (skills.length > 0) {
-            return skills[0].execute(value);
-        }
+    filterDefenders(context, value) {
+        let skills = context.getSkills(SKILL_TYPE.SELECT_DEFENDER);
+
+        skills.forEach(s => value = s.execute(this, value));
 
         return value;
     }
+
+    /**
+     * apply to skills that are listening
+     * -- not implemented --
+     * @param {*} name 
+     */
+    fireEvent(context, name, value) {
+        let self = this;
+        let skills = context.getSkills(EVENT_LISTENER);
+        // filter on the event name
+        skills.forEach(s => self.addAction((battle) => s.execute(this, value)));
+    }
+
+    /**
+     * minion skills to be triggered at death
+     * @param {*} name 
+     * @param {*} minion 
+     */
+    triggerMinionDeath(context, minion) {
+        let skills = context.getSkills(SKILL_TYPE.MINION_DEATH, minion);
+        skills.forEach(s => s.execute(this));
+
+        // after exeucting those we send out a general event
+        this.addAction(
+            (battle) => this.battle.fireEvent(context, SKILL_TYPE.EVENT_DEATH, minion));
+    }
+
+    /**
+     * apply damage modifiers 
+     * @param {*} context 
+     * @param {*} minion 
+     * @param {*} damage 
+     */
+    modifyDamage(context, minion, damage) {
+        let skills = context.getSkills(SKILL_TYPE.MINION_DAMAGE, minion);
+
+        return (skills.length > 0) 
+            ? skills[0].execute(this, damage)
+            : damage; 
+    }
+
+    // ------------------------------------------------------------------------
 
     addAction(name, fn) {
         this.actionQueue.push({
@@ -161,9 +206,4 @@ export class Battler {
         });
     }
 
-    /*
-    addImmediateAction(fn) {
-        this.actionQueue.unshift(fn);
-    }
-    */
 }

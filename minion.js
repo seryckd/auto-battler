@@ -4,22 +4,33 @@ export class Minion {
 
     static counter = 0;
 
-    constructor(id) {
+    /**
+     * Minion has a unique id, and knows which context it belongs to.
+     * 
+     * @param {*} defId the definitionId in the minions database
+     * @param {*} context 
+     */
+    constructor(defId, context) {
         const self = this;
-        this.defId = id;
-        this.name = MinionDefs[id].name;
-        this.portrait = MinionDefs[id].portrait;
-        this.attack = MinionDefs[id].attack;
-        this.health = MinionDefs[id].health;
+        this.defId = defId;
+        this.context = context;
+        this.name = MinionDefs[defId].name;
+        this.portrait = MinionDefs[defId].portrait;
+        this.attack = MinionDefs[defId].attack;
+        this.health = MinionDefs[defId].health;
 
         this.skills = Array
-            .from(MinionDefs[id].skills)
+            .from(MinionDefs[defId].skills)
             .map(s => Skill.factory(s, self));
         this.id = Minion.counter++;
     }
 
     getId() {
         return this.id;
+    }
+
+    getContext() {
+        return this.context;
     }
 
     getName() {
@@ -80,7 +91,7 @@ export class Minion {
             + ",portrait:" + this.portrait
             + ",attack:" + this.attack
             + ",health:" + this.health
-            + ",skills:" + this.skills
+            + ",skills:" + this.skills.map(s => s.getName()).join()
             + "}";
     }
 }

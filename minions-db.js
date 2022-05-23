@@ -3,7 +3,7 @@ export var MinionDefs = {
         'name': 'Eric the Hydra',
         'portrait': 'hydra',
         'attack': 1,
-        'health': 1,
+        'health': 2,
         'skills': ['wall', 'shield']
     },
     '002': {

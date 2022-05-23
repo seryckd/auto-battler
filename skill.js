@@ -1,10 +1,16 @@
-import { BATTLE_PHASE } from './battler.js'
+
+export const SKILL_TYPE = {
+    SELECT_DEFENDER: 'select-defender',
+    MINION_DEATH: 'minion-death',
+    MINION_DAMAGE: 'minion-damage',
+    EVENT_LISTENER: 'event-listener'
+};
 
 export class Skill {
 
-    constructor(name, phase, minion) {
+    constructor(name, type, minion) {
         this.name = name;
-        this.phase = phase;
+        this.type = type
         this.minion = minion;
     }
 
@@ -26,12 +32,12 @@ export class Skill {
         return this.name;
     }
 
-    getPhase() {
-        return this.phase;
+    getType() {
+        return this.type;
     }
 
-    bind(context) {
-        this.context = context;
+    getContext() {
+        return this.minion.getContext();
     }
 
     doesApply(minion) {
@@ -39,6 +45,8 @@ export class Skill {
         if (minion === null) {
             return true;
         }
+
+        console.assert(this.minion.getId(), 'df');
 
         return this.minion.getId() === minion.getId();
     }
@@ -48,14 +56,14 @@ export class Skill {
     }
 
     log() {
-        console.log("skill %s, phase:%s, context:%s min:%s(%s)", 
-            this.name, this.phase, 
+        console.log("skill %s, type:%s, context:%s min:%s(%s)", 
+            this.name, this.type, 
             this.context.getName(),
             this.minion.getName(), this.minion.getId());
     }
 
-    execute(o) {
-        return o;
+    execute(battle, param) {
+        return param;
     }
 }
 
@@ -64,14 +72,14 @@ class WallSkill extends Skill {
     static NAME = 'wall';
 
     constructor(minion) {
-        super(WallSkill.NAME, BATTLE_PHASE.CHOOSE_DEFENDER, minion);
+        super(WallSkill.NAME, SKILL_TYPE.SELECT_DEFENDER, minion);
     }
 
     /**
      * 
      * @param {*} o An array of minions 
      */
-     execute(minions) {
+     execute(battle, minions) {
         // remove any that do not have wall
 
         return minions.filter(m => {
@@ -84,25 +92,16 @@ class ShieldSkill extends Skill {
     static NAME = 'shield';
 
     constructor(minion) {
-        super(ShieldSkill.NAME, BATTLE_PHASE.CALC_DAMAGE, minion);
+        super(ShieldSkill.NAME, SKILL_TYPE.MINION_DAMAGE, minion);
     }
 
     /**
      * 
      * @param {*} amount of damage
      */
-     execute(damage) {
-        let ctx = this.context;
-        let min = this.minion;
+     execute(battle, damage) {
         let self = this;
-
-        /*
-        this.engine.pushAction(function() {
-            // The skill disappears after use
-            ctx.loseMinionSkill(min, self);
-        });
-        */
-        ctx.loseMinionSkill(min, self);
+        battle.removeMinionSkill(this.minion, self);
 
         // all damage is abosrbed by the shield
         return 0;
@@ -114,22 +113,17 @@ class SummonSkill extends Skill {
     static NAME = 'summon';
 
     constructor(minion) {
-        super(SummonSkill.NAME, BATTLE_PHASE.MINION_DEATH, minion);
+        super(SummonSkill.NAME, SKILL_TYPE.MINION_DEATH, minion);
     }
 
     /**
      * 
      * @param {array} actionStack array of actions
      */
-    execute(actionStack) {
+    execute(battle) {
         console.log('summon skill');
-        /*
-        actionStack.push({
-            context: this.context,
-            minionId: '004'
-        });
-        */
-        this.context.addMinionId('004');
+
+        this.getContext().addMinionId('004');
     }
 }
 

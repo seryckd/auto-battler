@@ -25,10 +25,8 @@ export class Context {
     }
 
     addMinionId(id) {
-        let min = new Minion(id);
+        let min = new Minion(id, this);
         this.slots.push(min);
-
-        this.registerSkills(min.getSkills(), min);
 
         return min;
     }
@@ -36,8 +34,6 @@ export class Context {
     removeMinion(min) {
         var slot = this.getSlot(min);
         this.slots.splice(slot, 1);
-
-        this.unregisterSkills(min.getSkills());
 
         this.script.removeMinion(min);
     }
@@ -83,16 +79,30 @@ export class Context {
     }
 
  
-    getSkills(phase) {
-        let list = this.skills.get(phase);
-        return (list === undefined) ? [] : list;
-    }
+    /**
+     * Return the list of skills that match the given type
+     * 
+     * @param {} type 
+     * @param {*} minion optional
+     * @returns 
+     */
+    getSkills(type, minion) {
 
-    loseMinionSkill(minion, skill) {
-        console.log("lose skill:%s minion:%s", skill.getName(), minion.getId());
-        minion.loseSkill(name);
-        this.unregisterSkills([skill]);
-        this.script.loseSkill(minion, skill.getName());
+        let skills = [];
+
+        minion = minion === undefined ? null : minion;
+
+        this.getMinions().forEach(m => {
+
+            console.info('getSkills %s', m.toString())
+
+            m.getSkills()
+                .filter(s => s.doesApply(minion))
+                .filter(s => s.getType() === type)
+                .forEach(s => skills.push(s));
+        });
+
+        return skills;
     }
 
     log() {
@@ -100,36 +110,4 @@ export class Context {
         this.slots.forEach((p, i) => console.log("%d %o", i, p));
         console.groupEnd();
     }
-
-    /**
-     * private
-     * @param {*} skills 
-     */
-    registerSkills(skills, minion) {
-        skills.forEach(skill => {            
-            skill.bind(this);
-
-            let list = this.skills.get(skill.getPhase());
-            if (list === undefined) {
-                list = [];
-                this.skills.set(skill.getPhase(), list);
-            }
-            list.push(skill);
-        });
-    }
-
-    /**
-     * private
-     * @param {*} skills 
-     */
-    unregisterSkills(skills) {
-
-        skills.forEach(skill => {
-            let list = this.skills.get(skill.getPhase());
-            list.splice(
-                list.findIndex(s => s.isEqual(skill)), 
-                1);
-        });
-    }
-
 }
