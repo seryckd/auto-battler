@@ -109,26 +109,28 @@ export class Viewer {
 
         let actions = this.turns[this.turnCount][scriptPhase];
 
-        actions.forEach(a => {
-            switch(a.action) {
-                case 'attack': {
-                    console.log('Action: attack, id:%s, targetId:%s', a.id, a.targetId);
-                    animations.push(this.actionAttack(a));
-                    break;
+        if (actions !== undefined) {
+            actions.forEach(a => {
+                switch(a.action) {
+                    case 'attack': {
+                        console.log('Action: attack, id:%s, targetId:%s', a.id, a.targetId);
+                        animations.push(this.actionAttack(a));
+                        break;
+                    }
+                    case 'change': {
+                        animations.push(this.actionChange(a));
+                        break;
+                    }
+                    case 'remove': {
+                        animations.push(this.actionRemove(a));
+                        break;
+                    }
+                    default: {
+                        console.assert(true, 'Unknown action %s', a.action);
+                    }
                 }
-                case 'change': {
-                    animations.push(this.actionChange(a));
-                    break;
-                }
-                case 'remove': {
-                    animations.push(this.actionRemove(a));
-                    break;
-                }
-                default: {
-                    console.assert(true, 'Unknown action %s', a.action);
-                }
-            }
-        });
+            });
+        }
 
         return animations.filter(a => a !== null);
     }

@@ -77,17 +77,24 @@ export class BattleScript {
     }
 
     nextTurn() {
-        this.phases = {};
+        this.phases = {
+            'charge': [],
+            'hit': [],
+            'resolve': []
+        };
         this.script.turns.push(this.phases);
     }
 
-    nextPhase(name) {
-        this.phase = [];
-        this.phases[name] = this.phase;
-    }
-
+    /**
+     * This automatically starts a new turn
+     * 
+     * @param {Minion} attacker 
+     * @param {Minion} defender 
+     */
     addAttack(attacker, defender) {
-        this.phase.push({
+        this.nextTurn();
+
+        this.phases[TRANSCRIPT_PHASE.CHARGE].push({
             action: 'attack',
             id: attacker.getId(),
             targetId: defender.getId()
@@ -95,7 +102,7 @@ export class BattleScript {
     }
 
     addChange(minion, stat, value) {
-        this.phase.push({
+        this.phases[TRANSCRIPT_PHASE.HIT].push({
             action: 'change',
             id: minion.getId(),
             type: 'stat',
@@ -105,14 +112,14 @@ export class BattleScript {
     }
 
     removeMinion(minion) {
-        this.phase.push({
+        this.phases[TRANSCRIPT_PHASE.RESOLVE].push({
             action: 'remove',
             id: minion.getId()
         });
     }
 
     loseSkill(minion, name) {
-        this.phase.push({
+        this.phases[TRANSCRIPT_PHASE.HIT].push({
             action: 'change',
             id: minion.getId(),
             type: 'lose',

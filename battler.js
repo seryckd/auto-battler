@@ -8,12 +8,6 @@ import { randomInt } from './utils.js'
  * Battle Engine. Executes a battle between two players and outputs
  * the result to a BattleScript.
  */
-
-export const BATTLE_PHASE = {
-    CHOOSE_DEFENDER: 'choose-defender',
-    CALC_DAMAGE: 'calc-damage',
-    MINION_DEATH: 'minion-death'
-};
 export class Battler {
 
     constructor(p1, p2) {
@@ -42,9 +36,6 @@ export class Battler {
         while(this.attackPlayer.hasMinions() && this.defendPlayer.hasMinions())
         {
             console.log('start turn defendPlayer: %s', this.defendPlayer.getName());
-
-            this.bs.nextTurn();
-            this.bs.nextPhase(TRANSCRIPT_PHASE.CHARGE);
 
             this.addAction('prepare', (battle) => {battle.prepareAction()})
 
@@ -91,7 +82,9 @@ export class Battler {
     }
 
     attackAction(defendSlot, defendMinion, attackSlot, attackMinion) {
-        // not implemented yet, passthru to combat
+
+        this.bs.addAttack(attackMinion, defendMinion);
+
         this.addAction('combat', (battle) => {
             battle.combatAction(defendSlot, defendMinion, attackSlot, attackMinion);
         })
@@ -104,9 +97,6 @@ export class Battler {
 
         this.attackPlayer.log();
         this.defendPlayer.log();
-
-        this.bs.addAttack(attackMinion, defendMinion);
-        this.bs.nextPhase(TRANSCRIPT_PHASE.HIT);
 
         this.addAction('applyDamage', (battle) => {
             battle.applyDamageAction(
@@ -130,12 +120,12 @@ export class Battler {
         if (actualDamage > 0) {
             minion.takeDamage(actualDamage);
 
-            this.bs.nextPhase(TRANSCRIPT_PHASE.RESOLVE);
             this.bs.addChange(minion, "health", minion.getHealth());
 
             if (minion.isDead()) {
                 this.addAction('removeMinion', (battle) => {
                     player.removeMinion(minion);
+                    this.bs.removeMinion(minion);
                 });
             }
         }

@@ -34,8 +34,6 @@ export class Context {
     removeMinion(min) {
         var slot = this.getSlot(min);
         this.slots.splice(slot, 1);
-
-        this.script.removeMinion(min);
     }
 
     /**
@@ -93,8 +91,6 @@ export class Context {
         minion = minion === undefined ? null : minion;
 
         this.getMinions().forEach(m => {
-
-            console.info('getSkills %s', m.toString())
 
             m.getSkills()
                 .filter(s => s.doesApply(minion))
