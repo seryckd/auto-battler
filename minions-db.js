@@ -11,7 +11,7 @@ export var MinionDefs = {
         'portrait': 'medusa-head',
         'attack': 2,
         'health': 2,
-        'skills': []
+        'skills': ['summon']
     },
     '003': {
         'name': 'Harry the Gnome',

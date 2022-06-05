@@ -11,7 +11,7 @@ export class Viewer {
         this.turnCount = -1;
         this.attackContext = {};
 
-        this.phases = [ 'charge', 'hit', 'resolve' ];
+        this.phases = [ 'charge', 'hit', 'resolve', 'summon' ];
         this.phaseIdx = -1;
     }
 
@@ -20,6 +20,10 @@ export class Viewer {
         minions.forEach(element => {
             tray.appendChild(this.createMinion(element));
         });
+    }
+
+    getTrayForPlayer(id) {
+        return (this.tray1.id == id) ? 'tray1' : 'tray2';
     }
 
     playAllTurns(onPlayFinishFn) {
@@ -80,6 +84,10 @@ export class Viewer {
                 );
                 break;
             }
+            case 'summon': {
+                animations = this.createAnimations('summon');
+                break;
+            }
             case 'end': {
                 this.onTurnFinishFn();
                 return;
@@ -123,6 +131,14 @@ export class Viewer {
                     }
                     case 'remove': {
                         animations.push(this.actionRemove(a));
+                        break;
+                    }
+                    case 'summon': {
+
+                        let pid = this.getTrayForPlayer(a.player);
+                        let tray = document.getElementById(pid);
+                        tray.appendChild(this.createMinion(a.minion));
+                
                         break;
                     }
                     default: {

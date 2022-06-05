@@ -24,11 +24,21 @@ export class Context {
         return this.player.getName();
     }
 
+    /**
+     * Adds a new minion to the end of the slot if there is room
+     * 
+     * @param {*} id 
+     * @returns added minion or null
+     */
     addMinionId(id) {
-        let min = new Minion(id, this);
-        this.slots.push(min);
 
-        return min;
+        if (this.filledSlots() < 5) {
+            let min = new Minion(id, this);
+            this.slots.push(min);
+            return min;
+        }
+
+        return null;
     }
 
     removeMinion(min) {
@@ -88,12 +98,12 @@ export class Context {
 
         let skills = [];
 
-        minion = minion === undefined ? null : minion;
+        let minions = minion === undefined ?
+            this.getMinions() : [ minion ];
 
-        this.getMinions().forEach(m => {
-
-            m.getSkills()
-                .filter(s => s.doesApply(minion))
+        minions.forEach(m => {
+            m
+                .getSkills()
                 .filter(s => s.getType() === type)
                 .forEach(s => skills.push(s));
         });

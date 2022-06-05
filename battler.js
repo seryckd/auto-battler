@@ -42,7 +42,7 @@ export class Battler {
             while(this.actionQueue.length > 0) {
                 let action = this.actionQueue.shift();
 
-                console.log('action: %s', action.name);
+                console.log('about to execute action: %s', action.name);
                 
                 action.callback(this);
             }
@@ -125,7 +125,8 @@ export class Battler {
             if (minion.isDead()) {
                 this.addAction('removeMinion', (battle) => {
                     player.removeMinion(minion);
-                    this.bs.removeMinion(minion);
+                    battle.bs.removeMinion(minion);
+                    battle.triggerMinionDeath(player, minion);
                 });
             }
         }
@@ -156,7 +157,7 @@ export class Battler {
         let self = this;
         let skills = context.getSkills(EVENT_LISTENER);
         // filter on the event name
-        skills.forEach(s => self.addAction((battle) => s.execute(this, value)));
+        skills.forEach(s => self.addAction('listener-skill', (battle) => s.execute(this, value)));
     }
 
     /**
@@ -165,12 +166,10 @@ export class Battler {
      * @param {*} minion 
      */
     triggerMinionDeath(context, minion) {
+        let self = this;
         let skills = context.getSkills(SKILL_TYPE.MINION_DEATH, minion);
-        skills.forEach(s => s.execute(this));
 
-        // after exeucting those we send out a general event
-        this.addAction(
-            (battle) => this.battle.fireEvent(context, SKILL_TYPE.EVENT_DEATH, minion));
+        skills.forEach(s => self.addAction('death-skill', (battle) => s.execute(this)));
     }
 
     /**

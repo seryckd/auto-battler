@@ -46,7 +46,7 @@ export class Skill {
             return true;
         }
 
-        console.assert(this.minion.getId(), 'df');
+        console.assert(this.minion, 'skill is not associated with a minion');
 
         return this.minion.getId() === minion.getId();
     }
@@ -76,11 +76,11 @@ class WallSkill extends Skill {
     }
 
     /**
+     * Only return the minions with 'wall' skill
      * 
      * @param {*} o An array of minions 
      */
      execute(battle, minions) {
-        // remove any that do not have wall
 
         return minions.filter(m => {
             return m.hasSkill(WallSkill.NAME)
@@ -96,6 +96,8 @@ class ShieldSkill extends Skill {
     }
 
     /**
+     * Shield negates all damage, but shield is removed 
+     * from this minion
      * 
      * @param {*} amount of damage
      */
@@ -121,9 +123,14 @@ class SummonSkill extends Skill {
      * @param {array} actionStack array of actions
      */
     execute(battle) {
-        console.log('summon skill');
 
-        this.getContext().addMinionId('004');
+        let min = this.getContext().addMinionId('004');
+
+        // Minions can only be summoned if there is room on
+        // the board or they are lost
+        if (min != null) {
+            battle.bs.summonMinion(min.getContext().getName(), min);
+        }
     }
 }
 

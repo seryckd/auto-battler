@@ -21,7 +21,8 @@ import { Minion } from './minion.js'
 export const TRANSCRIPT_PHASE = {
     CHARGE: 'charge',
     HIT: 'hit',
-    RESOLVE: 'resolve'
+    RESOLVE: 'resolve',
+    SUMMON: 'summon'
 };
 
 export class BattleScript {
@@ -54,21 +55,14 @@ export class BattleScript {
     }
 
     addPlayer(player, minions) {
+        let self=this;
         let p = {};
         p['id'] = player.getName();
 
         let ms = new Array();
 
         minions.forEach(minion => {
-            ms.push({
-                id: minion.getId(),
-                name: minion.getName(),
-                portrait: minion.getPortrait(),
-                attack: minion.getAttack(),
-                health: minion.getHealth(),
-                skills: minion.getSkills().map(s => s.getName())
-            });
-
+            ms.push(self.describeMinion(minion));
         });
 
         p['minions'] = ms;
@@ -76,11 +70,24 @@ export class BattleScript {
         this.script.players.push(p);
     }
 
+    describeMinion(minion) {
+
+        return {
+            id: minion.getId(),
+            name: minion.getName(),
+            portrait: minion.getPortrait(),
+            attack: minion.getAttack(),
+            health: minion.getHealth(),
+            skills: minion.getSkills().map(s => s.getName())
+        };
+    }
+
     nextTurn() {
         this.phases = {
             'charge': [],
             'hit': [],
-            'resolve': []
+            'resolve': [],
+            'summon': []
         };
         this.script.turns.push(this.phases);
     }
@@ -115,6 +122,15 @@ export class BattleScript {
         this.phases[TRANSCRIPT_PHASE.RESOLVE].push({
             action: 'remove',
             id: minion.getId()
+        });
+    }
+
+    summonMinion(playerName, minion) {
+        let self=this;
+        this.phases[TRANSCRIPT_PHASE.SUMMON].push({
+            action: 'summon',
+            player: playerName,
+            minion: self.describeMinion(minion)
         });
     }
 
