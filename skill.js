@@ -20,12 +20,17 @@ export class Skill {
         Skill.registry[skill] = ctor;
     }
 
-    static factory(name, minion) {
-        let ctor = Skill.registry[name];
+    static factory(skill, minion) {
 
-        console.assert(ctor !== undefined, "Unknown skill '%s'", name);
+        let parts = skill.split(':');
 
-        return new ctor(minion);
+        let ctor = Skill.registry[parts[0]];
+
+        parts.shift();
+
+        console.assert(ctor !== undefined, "Unknown skill '%s' from '%s'", parts, skill);
+
+        return new ctor(parts, minion);
     }
 
     getName() {
@@ -71,7 +76,7 @@ class WallSkill extends Skill {
 
     static NAME = 'wall';
 
-    constructor(minion) {
+    constructor(params, minion) {
         super(WallSkill.NAME, SKILL_TYPE.SELECT_DEFENDER, minion);
     }
 
@@ -91,7 +96,7 @@ class ShieldSkill extends Skill {
 
     static NAME = 'shield';
 
-    constructor(minion) {
+    constructor(params, minion) {
         super(ShieldSkill.NAME, SKILL_TYPE.MINION_DAMAGE, minion);
     }
 
@@ -114,8 +119,17 @@ class SummonSkill extends Skill {
 
     static NAME = 'summon';
 
-    constructor(minion) {
+    /**
+     * 
+     * @param {*} params Expecting [ minion id, summon count ]
+     * @param {*} minion 
+     */
+    constructor(params, minion) {
         super(SummonSkill.NAME, SKILL_TYPE.MINION_DEATH, minion);
+
+        this.summonId = params[0];
+
+        this.summonCount = params.length > 1 ? params[1] : 1;
     }
 
     /**
@@ -124,12 +138,14 @@ class SummonSkill extends Skill {
      */
     execute(battle) {
 
-        let min = this.getContext().addMinionId('004');
+        for (let i=0; i<this.summonCount; i++) {
+            let min = this.getContext().addMinionId(this.summonId);
 
-        // Minions can only be summoned if there is room on
-        // the board or they are lost
-        if (min != null) {
-            battle.bs.summonMinion(min.getContext().getName(), min);
+            // Minions can only be summoned if there is room on
+            // the board
+            if (min != null) {
+                battle.bs.summonMinion(min.getContext().getName(), min);
+            }    
         }
     }
 }

@@ -4,14 +4,14 @@ export var MinionDefs = {
         'portrait': 'hydra',
         'attack': 1,
         'health': 2,
-        'skills': ['wall', 'shield']
+        'skills': ['wall', 'summon:005']
     },
     '002': {
         'name': 'George the Medusa',
         'portrait': 'medusa-head',
         'attack': 2,
         'health': 2,
-        'skills': ['summon']
+        'skills': ['summon:004:2']
     },
     '003': {
         'name': 'Harry the Gnome',
@@ -23,8 +23,15 @@ export var MinionDefs = {
     '004': {
         'name': 'Fish stick',
         'portrait': 'piranha',
-        'attack': 2,
+        'attack': 1,
+        'health': 1,
+        'skills': [ 'shield' ]
+    },    
+    '005': {
+        'name': 'Ears',
+        'portrait': 'anubis',
+        'attack': 1,
         'health': 2,
-        'skills': []
+        'skills': [  ]
     }    
 };
