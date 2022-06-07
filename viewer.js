@@ -137,7 +137,10 @@ export class Viewer {
 
                         let pid = this.getTrayForPlayer(a.player);
                         let tray = document.getElementById(pid);
-                        tray.appendChild(this.createMinion(a.minion));
+                        let min = this.createMinion(a.minion);
+                        tray.appendChild(min);
+
+                        animations.push(this.summonAnimation(min));
                 
                         break;
                     }
@@ -348,6 +351,16 @@ export class Viewer {
         ], {
             duration: 500,
             fill: 'forwards',
+            iterations: 1
+        });
+    }
+
+    summonAnimation(minion) {
+        return minion.animate([
+            { transform: 'scale(0)' },
+            { transform: 'scale(1)' }
+        ], {
+            duration: 500,
             iterations: 1
         });
     }
