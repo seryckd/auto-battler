@@ -249,6 +249,12 @@ export class Viewer {
             <div class="health">${minion.health}</div>
         `;
 
+        if (minion.skills.find(e => e === 'summon')) {
+            min.innerHTML += '<div class="death"/>';
+        } else {
+            min.innerHTML += '<div/>';
+        }
+
         return min;
     }
 
