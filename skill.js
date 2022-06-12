@@ -1,30 +1,48 @@
 
+export const SKILL_TYPE = {
+    SELECT_DEFENDER: 'select-defender',
+    MINION_DEATH: 'minion-death',
+    MINION_DAMAGE: 'minion-damage',
+    EVENT_LISTENER: 'event-listener'
+};
+
 export class Skill {
 
-    constructor(name, phase) {
+    constructor(name, type, minion) {
         this.name = name;
-        this.phase = phase;
+        this.type = type
+        this.minion = minion;
     }
 
-    static factory(name) {
-        switch(name) {
-            case 'wall': return new WallSkill();
-            case 'shield': return new ShieldSkill();
-            default: return undefined;
-        }
+    static registry = {}
+
+    static register(skill, ctor) {
+        Skill.registry[skill] = ctor;
+    }
+
+    static factory(skill, minion) {
+
+        let parts = skill.split(':');
+
+        let ctor = Skill.registry[parts[0]];
+
+        parts.shift();
+
+        console.assert(ctor !== undefined, "Unknown skill '%s' from '%s'", parts, skill);
+
+        return new ctor(parts, minion);
     }
 
     getName() {
         return this.name;
     }
 
-    getPhase() {
-        return this.phase;
+    getType() {
+        return this.type;
     }
 
-    bind(context, minion) {
-        this.context = context;
-        this.minion = minion;
+    getContext() {
+        return this.minion.getContext();
     }
 
     doesApply(minion) {
@@ -32,6 +50,8 @@ export class Skill {
         if (minion === null) {
             return true;
         }
+
+        console.assert(this.minion, 'skill is not associated with a minion');
 
         return this.minion.getId() === minion.getId();
     }
@@ -41,52 +61,98 @@ export class Skill {
     }
 
     log() {
-        console.log("skill %s, phase:%s, context:%s min:%s(%s)", 
-            this.name, this.phase, 
+        console.log("skill %s, type:%s, context:%s min:%s(%s)", 
+            this.name, this.type, 
             this.context.getName(),
             this.minion.getName(), this.minion.getId());
     }
 
-    execute(o) {
-        return o;
+    execute(battle, param) {
+        return param;
     }
 }
 
 class WallSkill extends Skill {
 
-    constructor() {
-        super('wall', 'choose-defender');
+    static NAME = 'wall';
+
+    constructor(params, minion) {
+        super(WallSkill.NAME, SKILL_TYPE.SELECT_DEFENDER, minion);
     }
 
     /**
+     * Only return the minions with 'wall' skill
      * 
      * @param {*} o An array of minions 
      */
-     execute(minions) {
-        // remove any that do not have wall
+     execute(battle, minions) {
 
         return minions.filter(m => {
-            return m.hasSkill("wall")
+            return m.hasSkill(WallSkill.NAME)
         });
     }
 }
-
 class ShieldSkill extends Skill {
 
-    constructor() {
-        super('shield', 'calc-damage');
+    static NAME = 'shield';
+
+    constructor(params, minion) {
+        super(ShieldSkill.NAME, SKILL_TYPE.MINION_DAMAGE, minion);
     }
 
     /**
+     * Shield negates all damage, but shield is removed 
+     * from this minion
      * 
      * @param {*} amount of damage
      */
-     execute(damage) {
-
-        // The skill disappears after use
-        this.context.loseMinionSkill(this.minion, this);
+     execute(battle, damage) {
+        let self = this;
+        battle.removeMinionSkill(this.minion, self);
 
         // all damage is abosrbed by the shield
         return 0;
     }
 }
+
+class SummonSkill extends Skill {
+
+    static NAME = 'summon';
+
+    /**
+     * 
+     * @param {*} params Expecting [ minion id, summon count ]
+     * @param {*} minion 
+     */
+    constructor(params, minion) {
+        super(SummonSkill.NAME, SKILL_TYPE.MINION_DEATH, minion);
+
+        this.summonId = params[0];
+
+        this.summonCount = params.length > 1 ? params[1] : 1;
+    }
+
+    /**
+     * This skill is triggered after a minion has died
+     * and been removed from play.
+     * 
+     * @param {*} battle 
+     * @param {*} slot the slot id the minion died at
+     * @param {*} */ 
+    execute(battle, slot) {
+
+        for (let i=0; i<this.summonCount; i++) {
+            let min = this.getContext().addMinionId(this.summonId, slot);
+
+            // Minions can only be summoned if there is room on
+            // the board
+            if (min != null) {
+                battle.bs.summonMinion(min.getContext().getName(), min, slot);
+            }    
+        }
+    }
+}
+
+Skill.register(WallSkill.NAME, WallSkill);
+Skill.register(SummonSkill.NAME, SummonSkill);
+Skill.register(ShieldSkill.NAME, ShieldSkill);
