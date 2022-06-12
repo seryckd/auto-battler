@@ -1,5 +1,8 @@
 import { Minion } from "./minion.js";
 
+/**
+ * Information about a player and their minsions during a battle. 
+ */
 export class Context {
 
     constructor(player, script) {
@@ -21,22 +24,38 @@ export class Context {
         return this.player.getName();
     }
 
-    addMinionId(id) {
-        let min = new Minion(id);
-        this.slots.push(min);
+    /**
+     * Adds a new minion to the end of the slot if there is room
+     * 
+     * @param {*} id 
+     * @returns added minion or null
+     */
+    addMinionId(id, slot) {
 
-        this.registerSkills(min.getSkills(), min);
+        if (this.filledSlots() < 5) {
+            let min = new Minion(id, this);
 
-        return min;
+            if (slot === undefined) {
+                this.slots.push(min);
+            } else {
+                this.slots.splice(slot, 0, min);
+            }
+            return min;
+        }
+
+        return null;
     }
 
+    /**
+     * Remove the minion and return the slot it was in.
+     * 
+     * @param {*} min 
+     * @returns 
+     */
     removeMinion(min) {
         var slot = this.getSlot(min);
         this.slots.splice(slot, 1);
-
-        this.unregisterSkills(min.getSkills());
-
-        this.script.removeMinion(min);
+        return slot;
     }
 
     /**
@@ -80,16 +99,28 @@ export class Context {
     }
 
  
-    getSkills(phase) {
-        let list = this.skills.get(phase);
-        return (list === undefined) ? [] : list;
-    }
+    /**
+     * Return the list of skills that match the given type
+     * 
+     * @param {} type 
+     * @param {*} minion optional
+     * @returns 
+     */
+    getSkills(type, minion) {
 
-    loseMinionSkill(minion, skill) {
-        console.log("lose skill:%s minion:%s", skill.getName(), minion.getId());
-        minion.loseSkill(name);
-        this.unregisterSkills([skill]);
-        this.script.loseSkill(minion, skill.getName());
+        let skills = [];
+
+        let minions = minion === undefined ?
+            this.getMinions() : [ minion ];
+
+        minions.forEach(m => {
+            m
+                .getSkills()
+                .filter(s => s.getType() === type)
+                .forEach(s => skills.push(s));
+        });
+
+        return skills;
     }
 
     log() {
@@ -97,36 +128,4 @@ export class Context {
         this.slots.forEach((p, i) => console.log("%d %o", i, p));
         console.groupEnd();
     }
-
-    /**
-     * private
-     * @param {*} skills 
-     */
-    registerSkills(skills, minion) {
-        skills.forEach(skill => {            
-            skill.bind(this, minion);
-
-            let list = this.skills.get(skill.getPhase());
-            if (list === undefined) {
-                list = [];
-                this.skills.set(skill.getPhase(), list);
-            }
-            list.push(skill);
-        });
-    }
-
-    /**
-     * private
-     * @param {*} skills 
-     */
-    unregisterSkills(skills) {
-
-        skills.forEach(skill => {
-            let list = this.skills.get(skill.getPhase());
-            list.splice(
-                list.findIndex(s => s.isEqual(skill)), 
-                1);
-        });
-    }
-
 }

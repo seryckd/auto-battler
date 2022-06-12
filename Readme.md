@@ -74,7 +74,7 @@ separate
   during a battle the stats change for the duration
   during a battle they may lose or aquire traits for the duration
   during a battle the stats or traits may be permanent
-- trait
+- skill
   something effects how the rules are played
   taunt, divine shield, windfury, mega windfury
 - hero 
@@ -118,50 +118,43 @@ minion
 
 # Effects
 
-## Combat Traits
+## Visual Categories
 
-Minions can have the following traits
+A skill may be associated with a category that has a visual representation. 
 
-- shield
-- taunt
-- poison
-- windfury
-- mega-windfury
-- cleave
-  attack defending minion and the minions next to it
-- reborn
-- summon
-  (count) number of (minions)
+| category | description | 
+| ---  | --- |
+| aftermath | An action occurs on the minions death |
+| applied-effect | The minion caused an effect else where |
+| many-attacks | The minion makes multiple attacks |
+| deadly-damage | The damage caused by this minion can cause death |
+| resurrect | The minion will come back to life after dying |
+| absorb-damage | This minion will negate some or all damage applied to it |
+| block | The minion must be attacked before others |  
 
-- sneaky-hit
-  attacks minion with lowest attack
+## Skills
 
-- gain (trait, attack, health) when (type) minion summoned
-- gain (trait, attack, health) when (type) minion died
-- gain (trait, attack, health) when minion looses (trait)
-- on attack something happens (e.g. trigger deathrattle)
-- gain deathrattle when another minion dies
+Skills have an internal name (id), and an optinal public name.  They may also be associated with a visual affect.
 
-## Combat area effect traits
-Some traits are not specific to the minions involved in combat.
+| id | name | visual | trigger | description | params |
+| ---  | --- | --- | --- | --- | --- |
+| frenzy | frenzy | many-attacks | combat resolution | attacks a random target again if it survives combat | number of attacks |
+| poison | poison | deadly-damage | on damage | kills anything it damages  | |
+| resurect | resurrect | resurrect | on death | comes back to life (once) | |
+| shield | shield | absorb-damage | on damage | abosrbs all damage (once) | |
+| summon | | aftermath | on death | create more minions in its place | minion type & count |
+| wall | wall |block | attack selection | enemies must attack a wall first | |  
+| target | | | attack selection | replaces all attack selection rules with its own | rules |
+| death2 | | | on aftermath skill | all aftermath skills trigger twice | |
+| summon2 | | | on minion summon | summon twice as many minions | |
+| shieldflip | | absorb-damage | gains 'shield' when another minion loses 'shield' | |
+| summongain | | | gains attack and/or health when a minion is summoned | attack gain, heath gain |
+| deathgain | | | gains attack and/or health when a minion dies | attack gain, health gain |
+| blockgain | | | gains attack and/or health when a minion with 'block' is attacked | attack gain, health gain |
+| triggerdeath | | | causes a random minions aftermath skills to trigger | |  
+| shieldgen | | aftermath | on death | give random minions a shield | count |
+| blast | | aftermath | on death | cause 1 damage to every minion | |
 
-- taunt gains (amount) when attacked
-- minions gain (ammount) when lose shield
-- minions gain (attack, health) when (count) minions die
-- summon twice as many minions
-- trigger deathrattles twice
-
-## Deathrattles
-A minion may have a trait that is triggered on it's death. A minion
-can have multiple copies of deathrattles.
-
-- (type) minions gain (trait, attack, health)
-  "dragons gain shield"
-- (count) minions gain (trait, attack, health)
-  "1 random minions gain shield/health/attack)
-  "2 random minions gain shield/health/attack)
-- (amount) damage to (count) minions
-  "1 damage to every minion of both players"
 
 ## Hero Powers
 Hero's can have powers that trigger at certain phases.
@@ -193,6 +186,20 @@ combat: object, array
     changes: object, array
       player, minion, new health, new attack, attribute name, 
       
+engine
+
+
+context
+  has minions
+
+minion
+  has skills
+
+skill
+  may create actions
+
+
+
 # Transcript
 
 The outcome of the battle is written as a script which can be followed (or 'played')
@@ -228,4 +235,13 @@ For the viewer, actions are defined as
 
 The transcript can give hints to the viewer on how to present the information,
 for instance by 'grouping' actions together that should occur at the same time.
+
+
+
+
+
+
+
+
+
 

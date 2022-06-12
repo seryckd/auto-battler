@@ -11,7 +11,7 @@ export class Viewer {
         this.turnCount = -1;
         this.attackContext = {};
 
-        this.phases = [ 'charge', 'hit', 'resolve' ];
+        this.phases = [ 'charge', 'hit', 'resolve', 'summon' ];
         this.phaseIdx = -1;
     }
 
@@ -20,6 +20,10 @@ export class Viewer {
         minions.forEach(element => {
             tray.appendChild(this.createMinion(element));
         });
+    }
+
+    getTrayForPlayer(id) {
+        return (this.tray1.id == id) ? 'tray1' : 'tray2';
     }
 
     playAllTurns(onPlayFinishFn) {
@@ -80,6 +84,10 @@ export class Viewer {
                 );
                 break;
             }
+            case 'summon': {
+                animations = this.createAnimations('summon');
+                break;
+            }
             case 'end': {
                 this.onTurnFinishFn();
                 return;
@@ -109,26 +117,32 @@ export class Viewer {
 
         let actions = this.turns[this.turnCount][scriptPhase];
 
-        actions.forEach(a => {
-            switch(a.action) {
-                case 'attack': {
-                    console.log('Action: attack, id:%s, targetId:%s', a.id, a.targetId);
-                    animations.push(this.actionAttack(a));
-                    break;
+        if (actions !== undefined) {
+            actions.forEach(a => {
+                switch(a.action) {
+                    case 'attack': {
+                        console.log('Action: attack, id:%s, targetId:%s', a.id, a.targetId);
+                        animations.push(this.actionAttack(a));
+                        break;
+                    }
+                    case 'change': {
+                        animations.push(this.actionChange(a));
+                        break;
+                    }
+                    case 'remove': {
+                        animations.push(this.actionRemove(a));
+                        break;
+                    }
+                    case 'summon': {
+                        animations.push(this.actionSummon(a));
+                        break;
+                    }
+                    default: {
+                        console.assert(true, 'Unknown action %s', a.action);
+                    }
                 }
-                case 'change': {
-                    animations.push(this.actionChange(a));
-                    break;
-                }
-                case 'remove': {
-                    animations.push(this.actionRemove(a));
-                    break;
-                }
-                default: {
-                    console.assert(true, 'Unknown action %s', a.action);
-                }
-            }
-        });
+            });
+        }
 
         return animations.filter(a => a !== null);
     }
@@ -180,6 +194,37 @@ export class Viewer {
         };        
     }
 
+    actionSummon(action) {
+
+        // create the new minion
+        let min = this.createMinion(action.minion);
+
+        // find the right tray
+        let pid = this.getTrayForPlayer(action.player);
+        let tray = document.getElementById(pid);
+
+        // insert new minion in the specified slot
+        // 1. if the given slot exits then use 'insertAdjacentElement'
+        // 2. if the given slot does not exist then use 'appendChild'
+
+        let current = tray.firstElementChild;
+
+        for(let i=0; i<action.slot; i++) {
+            current = current.nextElementSibling;
+            if (current == null) {
+                break;
+            }
+        }
+
+        if (current == null) {
+            tray.appendChild(min);
+        } else {
+            current.insertAdjacentElement('beforebegin', min);
+        }
+
+        return this.summonAnimation(min);
+    }
+
     phaseName() {
         this.phaseIdx++;
         if (this.phaseIdx < this.phases.length) {
@@ -227,6 +272,12 @@ export class Viewer {
             <div class="attack">${minion.attack}</div>
             <div class="health">${minion.health}</div>
         `;
+
+        if (minion.skills.find(e => e === 'summon')) {
+            min.innerHTML += '<div class="death"/>';
+        } else {
+            min.innerHTML += '<div/>';
+        }
 
         return min;
     }
@@ -330,6 +381,16 @@ export class Viewer {
         ], {
             duration: 500,
             fill: 'forwards',
+            iterations: 1
+        });
+    }
+
+    summonAnimation(minion) {
+        return minion.animate([
+            { transform: 'scale(0)' },
+            { transform: 'scale(1)' }
+        ], {
+            duration: 500,
             iterations: 1
         });
     }
