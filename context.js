@@ -30,20 +30,32 @@ export class Context {
      * @param {*} id 
      * @returns added minion or null
      */
-    addMinionId(id) {
+    addMinionId(id, slot) {
 
         if (this.filledSlots() < 5) {
             let min = new Minion(id, this);
-            this.slots.push(min);
+
+            if (slot === undefined) {
+                this.slots.push(min);
+            } else {
+                this.slots.splice(slot, 0, min);
+            }
             return min;
         }
 
         return null;
     }
 
+    /**
+     * Remove the minion and return the slot it was in.
+     * 
+     * @param {*} min 
+     * @returns 
+     */
     removeMinion(min) {
         var slot = this.getSlot(min);
         this.slots.splice(slot, 1);
+        return slot;
     }
 
     /**

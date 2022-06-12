@@ -133,18 +133,21 @@ class SummonSkill extends Skill {
     }
 
     /**
+     * This skill is triggered after a minion has died
+     * and been removed from play.
      * 
-     * @param {array} actionStack array of actions
-     */
-    execute(battle) {
+     * @param {*} battle 
+     * @param {*} slot the slot id the minion died at
+     * @param {*} */ 
+    execute(battle, slot) {
 
         for (let i=0; i<this.summonCount; i++) {
-            let min = this.getContext().addMinionId(this.summonId);
+            let min = this.getContext().addMinionId(this.summonId, slot);
 
             // Minions can only be summoned if there is room on
             // the board
             if (min != null) {
-                battle.bs.summonMinion(min.getContext().getName(), min);
+                battle.bs.summonMinion(min.getContext().getName(), min, slot);
             }    
         }
     }

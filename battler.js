@@ -124,9 +124,9 @@ export class Battler {
 
             if (minion.isDead()) {
                 this.addAction('removeMinion', (battle) => {
-                    player.removeMinion(minion);
+                    let slot = player.removeMinion(minion);
                     battle.bs.removeMinion(minion);
-                    battle.triggerMinionDeath(player, minion);
+                    battle.triggerMinionDeath(player, minion, slot);
                 });
             }
         }
@@ -165,11 +165,13 @@ export class Battler {
      * @param {*} name 
      * @param {*} minion 
      */
-    triggerMinionDeath(context, minion) {
+    triggerMinionDeath(context, minion, slot) {
         let self = this;
         let skills = context.getSkills(SKILL_TYPE.MINION_DEATH, minion);
 
-        skills.forEach(s => self.addAction('death-skill', (battle) => s.execute(this)));
+        skills.forEach(
+            s => self.addAction(
+                'death-skill', (battle) => s.execute(this, slot)));
     }
 
     /**

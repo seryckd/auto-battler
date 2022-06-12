@@ -125,11 +125,12 @@ export class BattleScript {
         });
     }
 
-    summonMinion(playerName, minion) {
+    summonMinion(playerName, minion, slot) {
         let self=this;
         this.phases[TRANSCRIPT_PHASE.SUMMON].push({
             action: 'summon',
             player: playerName,
+            slot: slot,
             minion: self.describeMinion(minion)
         });
     }

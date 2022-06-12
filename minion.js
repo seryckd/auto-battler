@@ -15,8 +15,6 @@ export class Minion {
         this.defId = defId;
         this.context = context;
 
-        console.assert(MinionDefs[defId] === null, 'Unknown minion id %s', defId);
-
         this.name = MinionDefs[defId].name;
         this.portrait = MinionDefs[defId].portrait;
         this.attack = MinionDefs[defId].attack;

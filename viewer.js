@@ -134,14 +134,7 @@ export class Viewer {
                         break;
                     }
                     case 'summon': {
-
-                        let pid = this.getTrayForPlayer(a.player);
-                        let tray = document.getElementById(pid);
-                        let min = this.createMinion(a.minion);
-                        tray.appendChild(min);
-
-                        animations.push(this.summonAnimation(min));
-                
+                        animations.push(this.actionSummon(a));
                         break;
                     }
                     default: {
@@ -199,6 +192,37 @@ export class Viewer {
                 .getElementById(self.makeDomId(action.id))
                 .remove();
         };        
+    }
+
+    actionSummon(action) {
+
+        // create the new minion
+        let min = this.createMinion(action.minion);
+
+        // find the right tray
+        let pid = this.getTrayForPlayer(action.player);
+        let tray = document.getElementById(pid);
+
+        // insert new minion in the specified slot
+        // 1. if the given slot exits then use 'insertAdjacentElement'
+        // 2. if the given slot does not exist then use 'appendChild'
+
+        let current = tray.firstElementChild;
+
+        for(let i=0; i<action.slot; i++) {
+            current = current.nextElementSibling;
+            if (current == null) {
+                break;
+            }
+        }
+
+        if (current == null) {
+            tray.appendChild(min);
+        } else {
+            current.insertAdjacentElement('beforebegin', min);
+        }
+
+        return this.summonAnimation(min);
     }
 
     phaseName() {
