@@ -65,15 +65,15 @@ export class Viewer {
 
         switch(phaseName) {
             case 'charge': {
-                animations = this.createAnimations('charge');
+                animations = this.createAnimationGroup('charge');
                 break;
             }
             case 'hit': {
-                animations = this.createAnimations('hit');
+                animations = this.createAnimationGroup('hit');
                 break;
             }
             case 'resolve': {
-                animations = this.createAnimations('resolve');
+                animations = this.createAnimationGroup('resolve');
 
                 // retreat animation
                 animations.push(
@@ -85,7 +85,7 @@ export class Viewer {
                 break;
             }
             case 'summon': {
-                animations = this.createAnimations('summon');
+                animations = this.createAnimationGroup('summon');
                 break;
             }
             case 'end': {
@@ -111,7 +111,7 @@ export class Viewer {
         }
     }
 
-    createAnimations(scriptPhase) {
+    createAnimationGroup(scriptPhase) {
 
         let animations = [];
 
@@ -177,8 +177,18 @@ export class Viewer {
             const attr = minion.getElementsByClassName(action.stat)[0];
             return this.damageAnimation(attr, action.value);
         } else {
-            minion.classList.remove(action.skill);
-            return null;
+
+            let elements = minion.getElementsByClassName(action.skill);
+
+            let anim = this.removeShieldAnimation(elements[0]);
+
+            anim.onfinish = function() {
+                Array
+                    .from(elements)
+                    .forEach(e => e.remove());
+            }
+
+            return anim;
         }
     }
 
@@ -250,34 +260,35 @@ export class Viewer {
 
         let min = document.createElement('div');
         min.classList.add('minion');
+        min.id = this.makeDomId(minion.id);
 
-        min.classList.add('base');
+        let modifiers = "";
 
         if (minion.skills.find(e => e === 'wall')) {
-            min.classList.add('wall');
+            modifiers += '<div class="wall"></div>';
         }
 
         if (minion.skills.find(e => e === 'shield')) {
-            min.classList.add('shield');
+            modifiers += '<div class="shield"></div>';
         }
-
-        min.id = this.makeDomId(minion.id);
-
-        min.innerHTML = `
-            <div class="name" id="${min.id}">
-                <svg class="name" width="60" height="60">
-                    <use href="#${minion.portrait}"/>
-                </svg>
-            </div>
-            <div class="attack">${minion.attack}</div>
-            <div class="health">${minion.health}</div>
-        `;
 
         if (minion.skills.find(e => e === 'summon')) {
-            min.innerHTML += '<div class="death"/>';
-        } else {
-            min.innerHTML += '<div/>';
+            modifiers += '<div class="death"></div>';
         }
+
+        min.innerHTML = `
+            <div class="image">
+                <div class="background"></div>
+                <svg class="portrait">
+                    <use href="#${minion.portrait}"/>
+                </svg>
+                ${modifiers}
+            </div>
+            <div class="stats">
+                <div class="attack">${minion.attack}</div>
+                <div class="health">${minion.health}</div>
+            </div>
+        `;
 
         return min;
     }
@@ -355,6 +366,12 @@ export class Viewer {
             })
     }
 
+    /**
+     * 
+     * @param {Element} element 
+     * @param {Integer} newValue 
+     * @returns 
+     */
     damageAnimation(element, newValue) {
 
         element.innerText = newValue;
@@ -362,10 +379,18 @@ export class Viewer {
         return element.animate(
             [
                 {
-                    color: 'blue'
+                    color: 'white'
                 },
                 {
-                    color: 'black'
+                    color: 'black',
+                    transform: 'scale(1.5)',
+                    fontWeight: 'bold',
+                    background: 'red',
+                    fontSize: '18px'
+                },
+                {
+                    transform: 'scale(1)'
+
                 }
             ], {
                 duration: 500,
@@ -389,6 +414,26 @@ export class Viewer {
         return minion.animate([
             { transform: 'scale(0)' },
             { transform: 'scale(1)' }
+        ], {
+            duration: 500,
+            iterations: 1
+        });
+    }
+
+    /**
+     * The shield falls away and vanishes
+     * @param {Element} el 
+     * @returns 
+     */
+    removeShieldAnimation(el) {
+        return el.animate([
+            {
+                opacity: '100%'
+            },
+            {
+                opacity: '0%',
+                top: 10
+            }
         ], {
             duration: 500,
             iterations: 1
