@@ -14,62 +14,88 @@
 }
 
 .minion {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    flex: 1 auto;
-    margin: 5px;
     width: 80px;
-    max-width: 80px;
     height: 100px;
-    max-height: 100px;
-    padding: 20px;
+    position: relative;
 }
 
-.minion > .name {
-    grid-row: 1;
-    grid-column-start: 1;
-    grid-column-end: 3;
-    text-align: center;
+.minion .image {
+    position: relative;
+    top: 0px;
+    left: 0px;
+    height: 100%;
 }
 
-.minion > .attack {
-    grid-row: 2;
-    grid-column: 1;
+.minion .background {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    background-image: url('backdrop.svg');
+    background-repeat: no-repeat;
+    z-index: 15;
+}
+
+.minion .portrait {
+    position: absolute;
+    top: 8px;
+    left: 5px;
+    width: 68px;
+    height: 68px;
+    z-index: 30;
+}
+
+.minion .attack {
+    position: absolute;
     text-align: center;
     color: white;
     vertical-align: middle;
-    margin-top: 15px;
+    top: 80px;
+    left: 5px;
+    width: 50%;
+    z-index: 20;
 }
 
-.minion > .health {
-    grid-row: 2;
-    grid-column: 2;
+.minion .health {
+    position: absolute;
     text-align: center;
     color: white;
-    margin-top: 15px;
+    vertical-align: middle;
+    top: 80px;
+    left: 45px;
+    width: 50%;
+    z-index: 20;
 }
 
-.minion > .death {
-    background-image: url('death.svg');
-    background-repeat: no-repeat, no-repeat;
-    grid-row: 3;
-    grid-column: 2;
-    position: relative;
-    left: -12px;
-    height: 20px;
+.minion .wall {
+    position: absolute;
+    background-image: url('wall.png');
+    background-size: contain;
+    z-index: 10;
+    top: 5px;
+    width: 100%;
+    height: 100%;
 }
 
-.minion.base {
-    background-image: url('backdrop.svg');
+.minion .shield {
+    position: absolute;
+    top: -15px;
+    left: -32px;
+    width: 180%;
+    height: 170%;
+    background-image: url('shield.svg');
     background-repeat: no-repeat;
+    z-index: 5;
 }
-.minion.wall {
-    background-image: url('backdrop.svg'), url('wall.png');
-    background-repeat: no-repeat, no-repeat;
-    background-size: auto, cover;
-    border-radius: 10%;
-    border: 1px solid;
-}
-.minion.shield {
-    box-shadow: 0 0 6px 10px rgba(204,65,37,1);
+
+.minion .death {
+    position: absolute;
+    width: 30;
+    height: 30;
+    top: 90px;
+    left: 25px;
+    background-image: url('death.svg');
+    background-repeat: no-repeat;
+    z-index: 35;
 }

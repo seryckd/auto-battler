@@ -42,6 +42,13 @@
          let p1 = new Player('p1', ['003', '001', '002']);
          let p2 = new Player('p2', ['002', '003', '002']);
 
+         //let p1 = new Player('p1', ['004' ]);
+         //let p2 = new Player('p2', ['004' ]);
+
+         // summon two
+         //let p1 = new Player('p1', ['002' ]);
+         //let p2 = new Player('p2', ['003' ]);
+
          let engine = new Battler(p1, p2);
          
          let viewer = new Viewer(JSON.parse(engine.battle()));
