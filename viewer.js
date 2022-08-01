@@ -13,6 +13,7 @@ export class Viewer {
 
         this.phases = [ 'charge', 'hit', 'resolve', 'summon' ];
         this.phaseIdx = -1;
+        this.phaseAnimations = [];
     }
 
     setup(minions, trayId) {
@@ -22,7 +23,7 @@ export class Viewer {
         });
     }
 
-    getTrayForPlayer(id) {
+    getTrayIdForPlayer(id) {
         return (this.tray1.id == id) ? 'tray1' : 'tray2';
     }
 
@@ -76,12 +77,14 @@ export class Viewer {
                 animations = this.createAnimationGroup('resolve');
 
                 // retreat animation
-                animations.push(
-                    this.retreatAnimation(
-                        this.attackContext.minion, 
-                        this.attackContext.delta.dX, 
-                        this.attackContext.delta.dY)
-                );
+                if (this.attackContext != null) {
+                    animations.push(
+                        this.animationRetreat(
+                            this.attackContext.minion, 
+                            this.attackContext.delta.dX, 
+                            this.attackContext.delta.dY)
+                    );
+                }
                 break;
             }
             case 'summon': {
@@ -97,27 +100,39 @@ export class Viewer {
             }
         }
 
-        let lastAnim = animations.pop();
-        if (lastAnim !== undefined) {
-            let existingOnFinish = lastAnim.onfinish;
-            lastAnim.onfinish = function() {
-                if (existingOnFinish !== null) {
-                    existingOnFinish();
-                }
-                self.nextPhase();
+        this.phaseAnimations = animations;
+
+        // set default onfinish if not already set
+        this.phaseAnimations.forEach(animation => {
+            if (animation.onfinish == null) {
+                animation.onfinish = () => self.finalizePhase();
             }
-        } else {
+        });
+
+        if (this.phaseAnimations.length == 0) {
             this.nextPhase();
         }
     }
+   
+    finalizePhase() {
+        this.phaseAnimations.pop();
+
+        if (this.phaseAnimations.length == 0) {
+            this.nextPhase();
+        }
+    }
+   
 
     createAnimationGroup(scriptPhase) {
 
+        let self = this;
         let animations = [];
+        let summons = { 'tray1':[], 'tray2': []};
 
         let actions = this.turns[this.turnCount][scriptPhase];
 
         if (actions !== undefined) {
+
             actions.forEach(a => {
                 switch(a.action) {
                     case 'attack': {
@@ -134,7 +149,8 @@ export class Viewer {
                         break;
                     }
                     case 'summon': {
-                        animations.push(this.actionSummon(a));
+                        let pid = this.getTrayIdForPlayer(a.player);
+                        summons[pid].push(a);
                         break;
                     }
                     default: {
@@ -142,6 +158,30 @@ export class Viewer {
                     }
                 }
             });
+
+            let nextSummon = function(self, arrs) {
+
+                let act = arrs.shift();
+                let anim = self.actionSummon(act);
+
+                if (arrs.length > 0) {
+                    anim.onfinish = () => { nextSummon(self, arrs); }
+                } else {
+                    anim.onfinish = () => { self.finalizePhase(); }
+                }
+
+                return anim;
+            };
+
+            let sarray = summons['tray1'];
+            if (sarray.length > 0) {
+                animations.push(nextSummon(self, sarray));
+            }
+
+            let sarray2 = summons['tray2'];
+            if (sarray2.length > 0) {
+                animations.push(nextSummon(self, sarray2));
+            }
         }
 
         return animations.filter(a => a !== null);
@@ -157,6 +197,7 @@ export class Viewer {
             );
 
         this.attackContext = {
+            id: action.id,
             minion: minion,
             delta: {
                 dX: delta.dX,
@@ -164,28 +205,33 @@ export class Viewer {
             }
         };
 
-        return this.attackAnimation(
+        return this.animationAttack(
             minion, 
             delta.dX, 
             delta.dY);
     }
 
     actionChange(action) {
+        let self=this;
         let minion = this.minionById(action.id);
 
         if (action.type === 'stat') {
             const attr = minion.getElementsByClassName(action.stat)[0];
-            return this.damageAnimation(attr, action.value);
+            attr.innerText = action.value;
+            return this.animationDamage(attr);
+
         } else {
 
             let elements = minion.getElementsByClassName(action.skill);
 
-            let anim = this.removeShieldAnimation(elements[0]);
+            let anim = this.animationRemoveShield(elements[0]);
 
             anim.onfinish = function() {
                 Array
                     .from(elements)
                     .forEach(e => e.remove());
+
+                self.finalizePhase();
             }
 
             return anim;
@@ -195,13 +241,24 @@ export class Viewer {
     actionRemove(action) {
         const self = this;
         const minion = this.minionById(action.id);
-        let anim = this.deadAnimation(minion);
+
+        console.log("remove id:%d", action.id);
+
+        if (this.attackContext && this.attackContext.id == action.id) {
+            this.attackContext = null;
+        }
+
+        let anim = this.animationDead(minion);
 
         anim.onfinish = function() {
             document
                 .getElementById(self.makeDomId(action.id))
                 .remove();
-        };        
+
+            self.finalizePhase();
+        }; 
+        
+        return anim;
     }
 
     actionSummon(action) {
@@ -209,8 +266,10 @@ export class Viewer {
         // create the new minion
         let min = this.createMinion(action.minion);
 
+        console.log("summon id:%d slot:%d", action.minion.id, action.slot);
+
         // find the right tray
-        let pid = this.getTrayForPlayer(action.player);
+        let pid = this.getTrayIdForPlayer(action.player);
         let tray = document.getElementById(pid);
 
         // insert new minion in the specified slot
@@ -232,7 +291,7 @@ export class Viewer {
             current.insertAdjacentElement('beforebegin', min);
         }
 
-        return this.summonAnimation(min);
+        return this.animationSummon(min);
     }
 
     phaseName() {
@@ -322,7 +381,7 @@ export class Viewer {
         }
     }
 
-    attackAnimation(minion, x, y) {
+    animationAttack(minion, x, y) {
         return minion.animate(
             [
                 {
@@ -346,7 +405,7 @@ export class Viewer {
             });
     }
 
-    retreatAnimation(minion, x, y) {
+    animationRetreat(minion, x, y) {
         return minion.animate(
             [
                 {
@@ -369,12 +428,9 @@ export class Viewer {
     /**
      * 
      * @param {Element} element 
-     * @param {Integer} newValue 
      * @returns 
      */
-    damageAnimation(element, newValue) {
-
-        element.innerText = newValue;
+    animationDamage(element) {
 
         return element.animate(
             [
@@ -399,10 +455,17 @@ export class Viewer {
         );
     }
 
-    deadAnimation(minion) {
+    animationDead(minion) {
         return minion.animate([
-            { opacity: '100%' },
-            { opacity: '0%' }
+            { 
+                opacity: '100%',
+                filter: 'grayscale(10%)'
+            },
+            {
+                opacity: '0%',
+                transform: 'scale(3)',
+                filter: 'grayscale(100%)'
+            }
         ], {
             duration: 500,
             fill: 'forwards',
@@ -410,13 +473,24 @@ export class Viewer {
         });
     }
 
-    summonAnimation(minion) {
+    animationSummon(minion) {
         return minion.animate([
-            { transform: 'scale(0)' },
-            { transform: 'scale(1)' }
+            { 
+                transform: 'scale(0.5)' 
+            },
+            { 
+                transform: 'scale(1.5)' 
+            },
+            { 
+                transform: 'scale(1)' 
+            }
         ], {
-            duration: 500,
-            iterations: 1
+            duration: 1000,
+            iterations: 1,
+            fill: 'none'
+            // a summon chained from another summon
+            // kept the first transform unless we fill forward
+            //fill: 'forwards'
         });
     }
 
@@ -425,14 +499,16 @@ export class Viewer {
      * @param {Element} el 
      * @returns 
      */
-    removeShieldAnimation(el) {
+    animationRemoveShield(el) {
+        console.assert(el != undefined, 'animate remove shield');
         return el.animate([
             {
                 opacity: '100%'
             },
             {
                 opacity: '0%',
-                top: 10
+                top: 10,
+                rotate: '25deg'
             }
         ], {
             duration: 500,
