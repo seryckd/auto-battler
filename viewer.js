@@ -486,11 +486,7 @@ export class Viewer {
             }
         ], {
             duration: 1000,
-            iterations: 1,
-            fill: 'none'
-            // a summon chained from another summon
-            // kept the first transform unless we fill forward
-            //fill: 'forwards'
+            iterations: 1
         });
     }
 
@@ -507,8 +503,10 @@ export class Viewer {
             },
             {
                 opacity: '0%',
-                top: 10,
-                rotate: '25deg'
+                // Chrome gives an error for a length type
+                // 'invalid keyframe value for property top: 10'
+                top: '20%',
+                transform: 'rotate(25deg)'
             }
         ], {
             duration: 500,

@@ -13,6 +13,8 @@ export class Context {
         this.slots = [];
         this.skills = new Map();
 
+        this.attackSlot = -1;
+
         this.player.getStartingMinionIds().forEach(id => {
             this.addMinionId(id);
         });
@@ -22,6 +24,19 @@ export class Context {
 
     getName() {
         return this.player.getName();
+    }
+
+    /**
+     * 
+     * @returns slot number, 0 based offset
+     */
+    getNextAttackSlot() {
+
+        if (++this.attackSlot > (this.filledSlots()-1)) {
+            this.attackSlot = 0;
+        }
+
+        return this.attackSlot;
     }
 
     /**
@@ -75,13 +90,12 @@ export class Context {
     }
 
     /**
-     * 0 offset
-     * @param {int} pos 
+     * @param {int} pos 0 offset
      * @returns {Minion}
      */
      getMinionAtSlot(pos) {
 
-        console.assert(pos>=0 | pos<=this.slots.length, 
+        console.assert(pos>=0 || pos<=this.slots.length, 
             "pos %d out of range 0-%i", pos, this.slots.length);
 
         return this.slots[pos];
@@ -124,7 +138,8 @@ export class Context {
     }
 
     log() {
-        console.groupCollapsed("player: %s, minions: %s", this.player.getName(), this.slots.length);
+        console.groupCollapsed("player: %s, numMins: %s, attackSlot: %s", 
+            this.player.getName(), this.slots.length, this.attackSlot);
         this.slots.forEach((p, i) => console.log("%d %o", i, p));
         console.groupEnd();
     }
