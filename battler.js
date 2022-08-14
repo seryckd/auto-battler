@@ -84,6 +84,14 @@ export class Battler {
         })
     }
 
+    /**
+     * Actions that occur after selection, but before combat.
+     * 
+     * @param {*} defendSlot 
+     * @param {*} defendMinion 
+     * @param {*} attackSlot 
+     * @param {*} attackMinion 
+     */
     attackAction(defendSlot, defendMinion, attackSlot, attackMinion) {
 
         this.bs.addAttack(attackMinion, defendMinion);
@@ -93,6 +101,14 @@ export class Battler {
         })
     }
 
+    /**
+     * Actiosn that occur as a result of combat between minions.
+     * 
+     * @param {*} defendSlot 
+     * @param {*} defendMinion 
+     * @param {*} attackSlot 
+     * @param {*} attackMinion 
+     */
     combatAction(defendSlot, defendMinion, attackSlot, attackMinion) {
 
         console.log("combat defendPlayer:%s, attackSlot:%i, defendSlot:%i, attackMinion: %s, defendMinion: %s",
@@ -103,15 +119,25 @@ export class Battler {
 
         this.addAction('applyDamage', (battle) => {
             battle.applyDamageAction(
-                this.attackPlayer, attackSlot, attackMinion, defendMinion.getAttack())
+                this.attackPlayer, attackSlot, attackMinion, 
+                this.calculateAttack(defendMinion))
         });
 
         this.addAction('applyDamage', (battle) => {
             battle.applyDamageAction(
-                this.defendPlayer, defendSlot, defendMinion, attackMinion.getAttack())
+                this.defendPlayer, defendSlot, defendMinion, 
+                this.calculateAttack(attackMinion))
         });
     }
 
+    /**
+     * Apply damage to a minion and kill it if required
+     * 
+     * @param {*} player 
+     * @param {*} slot 
+     * @param {*} minion 
+     * @param {*} reqestedDamage -1 is instant kill, 0 is no damage, +ve is amount of damage taken
+     */
     applyDamageAction(player, slot, minion, reqestedDamage) {
 
         let actualDamage = this.modifyDamage(
@@ -120,21 +146,34 @@ export class Battler {
             reqestedDamage
             );
 
+        if (actualDamage < 0) {
+            // instant kill
+            console.log('instant kill');
+            minion.takeDamage(minion.getHealth());
+            this.bs.addChange(minion, "health", minion.getHealth());
+        }
+
         if (actualDamage > 0) {
             minion.takeDamage(actualDamage);
-
             this.bs.addChange(minion, "health", minion.getHealth());
 
-            if (minion.isDead()) {
-                this.addAction('removeMinion', (battle) => {
-                    let slot = player.removeMinion(minion);
-                    battle.bs.removeMinion(minion);
-                    battle.triggerMinionDeath(player, minion, slot);
-                });
-            }
+        }
+
+        if (minion.isDead()) {
+            this.addAction('removeMinion', (battle) => {
+                let slot = player.removeMinion(minion);
+                battle.bs.removeMinion(minion);
+                battle.triggerMinionDeath(player, minion, slot);
+            });
         }
     }
 
+    /**
+     * Helper function that can be called from Skills module
+     * 
+     * @param {*} minion 
+     * @param {*} skill 
+     */
     removeMinionSkill(minion, skill) {
         console.log("lose skill:%s minion:%s", skill.getName(), minion.getId());
         minion.loseSkill(skill.getName());
@@ -175,6 +214,23 @@ export class Battler {
         skills.forEach(
             s => self.addAction(
                 'death-skill', (battle) => s.execute(this, slot)));
+    }
+
+    /**
+     * Return the attack done by the minion
+     * 
+     * @param {*} minion attack minion
+     * @returns attack damage, -1 is instant kill, 0 is no damage, +ve is amount of damage
+     */
+    calculateAttack(minion) {
+        let baseAttack = minion.getAttack();
+
+        // Apply any modifiers
+        let skills = minion.getContext().getSkills(SKILL_TYPE.MINION_ATTACK, minion);
+ 
+        return (skills.length > 0) 
+            ? skills[0].execute(this, baseAttack)
+            : baseAttack;   
     }
 
     /**

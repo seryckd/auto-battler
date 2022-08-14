@@ -136,14 +136,21 @@ A skill may be associated with a category that has a visual representation.
 
 Skills have an internal name (id), and an optinal public name.  They may also be associated with a visual affect.
 
+implemented
+
+| name | visual | trigger | description | params |
+| --- | --- | --- | --- | --- |
+| poison | deadly-damage | calc-attack | kills anything it damages  | |
+| shield | absorb-damage | apply-damage | abosrbs all damage (once) | |
+| summon | aftermath | on death | create more minions in its place | minion type & count |
+| wall |block | attack selection | enemies must attack a wall first | |  
+
+not implemented
+
 | id | name | visual | trigger | description | params |
 | ---  | --- | --- | --- | --- | --- |
 | frenzy | frenzy | many-attacks | combat resolution | attacks a random target again if it survives combat | number of attacks |
-| poison | poison | deadly-damage | on damage | kills anything it damages  | |
 | resurect | resurrect | resurrect | on death | comes back to life (once) | |
-| shield | shield | absorb-damage | on damage | abosrbs all damage (once) | |
-| summon | | aftermath | on death | create more minions in its place | minion type & count |
-| wall | wall |block | attack selection | enemies must attack a wall first | |  
 | target | | | attack selection | replaces all attack selection rules with its own | rules |
 | death2 | | | on aftermath skill | all aftermath skills trigger twice | |
 | summon2 | | | on minion summon | summon twice as many minions | |
@@ -154,7 +161,6 @@ Skills have an internal name (id), and an optinal public name.  They may also be
 | triggerdeath | | | causes a random minions aftermath skills to trigger | |  
 | shieldgen | | aftermath | on death | give random minions a shield | count |
 | blast | | aftermath | on death | cause 1 damage to every minion | |
-
 
 ## Hero Powers
 Hero's can have powers that trigger at certain phases.

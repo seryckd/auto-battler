@@ -33,5 +33,12 @@ export var MinionDefs = {
         'attack': 1,
         'health': 2,
         'skills': [  ]
+    },
+    '006': {
+        'name': 'Blob',
+        'portrait': 'fleshy-mass',
+        'attack': 1,
+        'health': 1,
+        'skills': [ 'shield', 'poison' ]
     }    
 };

@@ -1,8 +1,9 @@
 
 export const SKILL_TYPE = {
     SELECT_DEFENDER: 'select-defender',
-    MINION_DEATH: 'minion-death',
+    MINION_ATTACK: 'minion-attack',
     MINION_DAMAGE: 'minion-damage',
+    MINION_DEATH: 'minion-death',
     EVENT_LISTENER: 'event-listener'
 };
 
@@ -26,9 +27,9 @@ export class Skill {
 
         let ctor = Skill.registry[parts[0]];
 
-        parts.shift();
+        console.assert(ctor !== undefined, "Unknown skill '%s' from '%s'", parts[0], skill);
 
-        console.assert(ctor !== undefined, "Unknown skill '%s' from '%s'", parts, skill);
+        parts.shift();
 
         return new ctor(parts, minion);
     }
@@ -153,6 +154,26 @@ class SummonSkill extends Skill {
     }
 }
 
+class PoisonSkill extends Skill {
+
+    static NAME = 'poison';
+
+    constructor(params, minion) {
+        super(PoisonSkill.NAME, SKILL_TYPE.MINION_ATTACK, minion);
+    }
+
+    /**
+     * Poison applies infinite amount of damage
+     * 
+     * @param {*} amount of damage
+     */
+     execute(battle, damage) {
+        return -1;
+    }
+}
+
+
 Skill.register(WallSkill.NAME, WallSkill);
 Skill.register(SummonSkill.NAME, SummonSkill);
 Skill.register(ShieldSkill.NAME, ShieldSkill);
+Skill.register(PoisonSkill.NAME, PoisonSkill);

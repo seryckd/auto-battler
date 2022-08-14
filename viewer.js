@@ -320,6 +320,7 @@ export class Viewer {
         let min = document.createElement('div');
         min.classList.add('minion');
         min.id = this.makeDomId(minion.id);
+        min.title = minion.portrait;
 
         let modifiers = "";
 
@@ -333,6 +334,10 @@ export class Viewer {
 
         if (minion.skills.find(e => e === 'summon')) {
             modifiers += '<div class="death"></div>';
+        }
+
+        if (minion.skills.find(e => e === 'poison')) {
+            modifiers += '<div class="poison"></div>';
         }
 
         min.innerHTML = `
