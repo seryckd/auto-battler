@@ -63,6 +63,9 @@ export class Battler {
         return str;
     }
 
+    /**
+     * Select the attacker and defender
+     */
     prepareAction() {
 
         let possibleDefenders = this.filterDefenders(
@@ -73,7 +76,7 @@ export class Battler {
         let defendMinion = possibleDefenders[randomInt(possibleDefenders.length)];
         let defendSlot = this.defendPlayer.getSlot(defendMinion);
 
-        let attackSlot = randomInt(this.attackPlayer.filledSlots());
+        let attackSlot = this.attackPlayer.getNextAttackSlot();
         let attackMinion = this.attackPlayer.getMinionAtSlot(attackSlot);
 
         this.addAction('attack', (battle) => {
