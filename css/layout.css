@@ -99,3 +99,14 @@
     background-repeat: no-repeat;
     z-index: 35;
 }
+
+.minion .poison {
+    position: absolute;
+    width: 30;
+    height: 30;
+    top: 90px;
+    left: 25px;
+    background-image: url('wasp-sting.svg');
+    background-repeat: no-repeat;
+    z-index: 35;
+}
