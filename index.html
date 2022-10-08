@@ -1,9 +1,10 @@
+<!DOCTYPE html>
 <html>
    <head>
+      <link type="image/png" sizes="16x16" rel="icon" href="icons8-umbrella-16.png">
       <link href="css/layout.css" rel="stylesheet" type="text/css">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">   
    </head>
-
    
    <body>
       <header>
@@ -28,6 +29,15 @@
 
       </main>
 
+      <!-- set to 'module' to run scripts or 'module-ignore' to skip -->
+      <script type="module-ignore">
+
+         import { UnitTests } from './tests/tests-db.js';
+         import { runTests } from './tests/tests.js';
+
+         runTests(UnitTests);
+
+      </script>
 
       <script type="module">
 
