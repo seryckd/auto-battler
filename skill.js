@@ -34,6 +34,10 @@ export class Skill {
         return new ctor(parts, minion);
     }
 
+    valueOf() {
+        return this.name;
+    }
+
     getName() {
         return this.name;
     }
