@@ -4,64 +4,132 @@ import { SKILL_TYPE } from './skill.js';
 import { BattleScript, TRANSCRIPT_PHASE } from './transcript.js'
 import { randomInt } from './utils.js'
 
+export const PLAYERS = {
+    PLAYER_1: 0,
+    PLAYER_2: 1
+};
+
 /**
  * Battle Engine. Executes a battle between two players and outputs
  * the result to a BattleScript.
  */
 export class Battler {
 
+    /**
+     * 
+     * @param {Context} p1 Player 1
+     * @param {Context} p2 Player 2
+     */
     constructor(p1, p2) {
         this.players = [ p1, p2 ];
 
         this.contexts = [];
         this.attackPlayer = {};
         this.defendPlayer = {};
+
+        this.stats = {};
     }
 
     battle() {
 
-        this.bs = new BattleScript();
-        this.actionQueue = [];
+        // select a random player
+        this.init(randomInt(2))
 
-        this.contexts = [ 
-            new Context(this.players[0], this.bs),
-            new Context(this.players[1], this.bs)
-        ];
-
-        const startPlayer = randomInt(2);
-
-        this.attackPlayer = this.contexts[startPlayer];
-        this.defendPlayer = this.contexts[1-startPlayer];
-
-        while(this.attackPlayer.hasMinions() && this.defendPlayer.hasMinions())
-        {
-            console.log('start turn defendPlayer: %s', this.defendPlayer.getName());
-
-            this.addAction('prepare', (battle) => {battle.prepareAction()})
-
-            while(this.actionQueue.length > 0) {
-                let action = this.actionQueue.shift();
-
-                console.log('about to execute action: %s', action.name);
-                
-                action.callback(this);
-            }
-
-            let tmp = this.attackPlayer;
-            this.attackPlayer = this.defendPlayer;
-            this.defendPlayer = tmp;
+        while(this.turn()) {
+            this.flipRoles();
         }
 
         let winner = this.attackPlayer.hasMinions() ? this.attackPlayer : this.defendPlayer;
         
         console.log('winner %o', winner);
 
-        let transcript = this.bs.fetchScript();
+        let str = this.fetchTranscript();
 
-        let str = JSON.stringify(transcript);
         console.log("script: %s", str);
+
         return str;
     }
+
+    // ------------------------------------------------------------------------
+    // helper functions for testing
+
+    /**
+     * 
+     * @param {PLAYERS} startPlayer must be 0 or 1
+     */
+    init(startPlayer) {
+
+        console.assert(startPlayer==0 || startPlayer==1, 'startPlayer must be 0 or 1');
+
+        this.bs = new BattleScript();
+        this.actionQueue = [];
+
+        this.stats = {
+            numTurns: 0
+        };
+
+        this.contexts = [ 
+            new Context(this.players[0], this.bs),
+            new Context(this.players[1], this.bs)
+        ];
+
+        this.attackPlayer = this.contexts[startPlayer];
+        this.defendPlayer = this.contexts[1-startPlayer];
+    }
+
+    /**
+     * 
+     * @returns true if a turn occurred; false if no minions
+     */
+    turn() {
+
+        if (!(this.attackPlayer.hasMinions() && this.defendPlayer.hasMinions())) {
+            return false;
+        }
+
+        this.turnActions();
+        
+        this.stats.numTurns++;
+
+        return true;
+    }
+
+    turnActions() {
+        console.log('start turn defendPlayer: %s', this.defendPlayer.getName());
+
+        this.addAction('prepare', (battle) => {battle.prepareAction()})
+
+        while(this.actionQueue.length > 0) {
+            let action = this.actionQueue.shift();
+
+            console.log('about to execute action: %s', action.name);
+            
+            action.callback(this);
+        }
+    }
+
+    fetchTranscript() {
+        return JSON.stringify(this.bs.fetchScript());
+    }
+
+    /**
+     * Switch the attacker and defender roles
+     */
+     flipRoles() {
+        let tmp = this.attackPlayer;
+        this.attackPlayer = this.defendPlayer;
+        this.defendPlayer = tmp;
+    }
+
+    state() {
+        return {
+            turnNum: this.stats.numTurns,
+            player1Mins: this.contexts[0].getMinions(),
+            player2Mins: this.contexts[1].getMinions()
+        }
+    }
+
+    // ------------------------------------------------------------------------
 
     /**
      * Select the attacker and defender
