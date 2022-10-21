@@ -14,119 +14,75 @@
       <main>      
          <section title="controls">
             <button type="button" id="play">play</button>
+            <button type="button" id="turn">next turn</button>
+            <button type="button" id="restart">restart</button>
          </section>
 
          <section title="board">
             <div class="board">
-               <div class="tray" id="team">
-                  <div class="entry"></div>
-                  <div class="entry"></div>
-                  <div class="entry"></div>
-                  <div class="entry"></div>
-                  <div class="entry"></div>
-                  <div class="entry"></div>
+               <div class="tray" id="tray1">
                </div>
-
-               <div>
-                  <ul id="library" class="shelf">
-                  </ul>
+               <div class="tray" id="tray2">
                </div>
             </div>
          </section>
 
       </main>
 
-      <script type="module">
-         import * as util from './utils.js';
-         import * as minions from './minions-db.js';
+      <!-- set to 'module' to run scripts or 'module-ignore' to skip -->
+      <script type="module-ignore">
 
-         let t = document.getElementById('team');
+         import { UnitTests } from './tests/tests-db.js';
+         import { runTests } from './tests/tests.js';
 
-         let p = document.getElementById('play');
-         p.addEventListener("click", e => {
-
-            let ids = [];
-
-            const matches = document.querySelectorAll(".tray .entry");
-
-            matches.forEach(m => {
-               Array.prototype.forEach.call(
-                  m.getElementsByClassName('minion'),
-                  min => {
-                     if (min != undefined) {
-                        console.log(min);
-                        ids.push(min.dataset.id);
-                     }
-                  }
-               );
-
-            });
-            sessionStorage.clear();
-            sessionStorage.setItem("minions", JSON.stringify(ids));
- 
-            location.href = 'viewer.html';
-         });
-
-            
-         // appears to be required for the drop event to hit the children??
-         t.addEventListener("dragover", (event) => {
-            event.preventDefault();
-         });
-   
-         // drop targets
-         var drop = document.getElementsByClassName('entry');
-         for(let i=0;i<drop.length;i++) {
-            let entry = drop[i];
-
-            entry.addEventListener('dragenter', event => {
-               event.preventDefault();
-               // Note: classList.add() doesn't seem to work after the class
-               // has been removed with classList.remove()
-               entry.classList.toggle('highlight');
-            });
-
-            entry.addEventListener('dragleave', event => {
-               event.preventDefault();
-               entry.classList.toggle('highlight');
-            });
-
-            entry.addEventListener('drop', event => {
-               event.preventDefault();
-               var minId = event.dataTransfer.getData("text/plain");
-
-               var newMin = util.createMinion(minions.MinionDefs[minId]);
-               newMin.dataset.id = minId;      
-
-               if (entry.hasChildNodes()) {
-                  entry.replaceChild(newMin, entry.firstChild);
-
-               } else {
-                  entry.appendChild(newMin);
-               }
-
-               entry.classList.toggle('highlight');
-            });
-         }
-
-         let l = document.getElementById('library');
-
-         Object.entries(minions.MinionDefs).forEach(minDef => {
-            
-            let min = util.createMinion(minDef[1]);
-            min.draggable = true;
-            min.dataset.id = minDef[0];
-            min.addEventListener("dragstart", (event) => 
-               event.dataTransfer.setData("text/plain", minDef[0])
-            );
-
-            let li = document.createElement('li');
-            li.appendChild(min);
-
-            l.appendChild(li);
-         });
+         runTests(UnitTests);
 
       </script>
 
+      <script type="module">
+
+         import { Battler } from './battler.js';          
+         import { Minion } from './minion.js';
+         import { Player } from './player.js';
+         import { Viewer } from './viewer.js';
+
+         //let p1 = new Player('p1', ['001', '002', '001', '003']);
+         //let p2 = new Player('p2', ['001', '003', '002']);
+
+         //let p1 = new Player('p1', ['003', '001', '002']);
+         //let p2 = new Player('p2', ['002', '003', '002']);
+
+         let ids = JSON.parse(sessionStorage.getItem("minions"));
+
+         console.log('starting ids ', ids);
+
+         //let p1 = new Player('p1', ['004', '003' ]);
+         let p1 = new Player('p1', ids);
+         let p2 = new Player('p2', ['006' ]);
+
+         // summon two
+         //let p1 = new Player('p1', ['002' ]);
+         //let p2 = new Player('p2', ['003' ]);
+
+         let engine = new Battler(p1, p2);
+         
+         let viewer = new Viewer(JSON.parse(engine.battle()));
+
+         document.getElementById('play').addEventListener('click', event => {
+            document.getElementById('play').disabled = true;
+            viewer.playAllTurns(() => document.getElementById('play').disabled = false);
+         });
+         document.getElementById('turn').addEventListener('click', event => {
+            document.getElementById('turn').disabled = true;
+            viewer.playNextTurn(() => document.getElementById('turn').disabled = false);
+         });
+         document.getElementById('restart').addEventListener('click', event => {
+            document.getElementById('play').disabled = false;
+            document.getElementById('turn').disabled = false;
+            viewer.restartPlay();
+            viewer = new Viewer(JSON.parse(engine.battle()));
+         });
+      </script>
    </body>
 
    <!--
