@@ -1,6 +1,7 @@
 
-import { Battler, PLAYERS } from '../battler.js';          
-import { Player } from '../player.js';
+import { Battler, PLAYERS } from '../src/battler.js';          
+import { Player } from '../src/player.js';
+import * as minions from './minions-test-db.js';
 
 var createMinionList = arr => {
     var mins = [];
@@ -13,6 +14,8 @@ var createMinionList = arr => {
 };
 
 export function runTests(tests) {
+
+    minions = testMioions;
 
     tests.forEach(test => {
         console.log('================================================');

@@ -1,4 +1,8 @@
 
+h1 {
+    text-align: center;
+}
+
 .board {
     display: flex;
     flex-direction: column;
@@ -42,6 +46,10 @@ ul.shelf li:hover {
     outline:  red solid 2px;
 }
 
+button {
+    margin: 1em;
+    padding: 1em;
+}
 
 .tray {
     display: flex;
