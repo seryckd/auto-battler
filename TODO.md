@@ -20,3 +20,7 @@
 * merge both html files into one
   possibly hidden sections, possibly set innerHtml
 
+* 'clear' button not working
+
+* add all core-js polyfils
+
