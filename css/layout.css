@@ -1,7 +1,54 @@
 
+h1 {
+    text-align: center;
+}
+
 .board {
     display: flex;
     flex-direction: column;
+}
+
+ul.shelf {
+    margin: 0;
+    padding: 0;
+
+    height: 200px;
+    align-items: center;
+    
+    display: flex;
+    overflow-x: auto;
+    /*justify-content: space-around;*/
+}
+
+
+ul.shelf li {
+    flex: 0 0 110px;    
+    list-style-type: none;
+}
+
+ul.shelf li:hover {
+    outline:  red solid 2px;
+}
+
+.review {
+    background:lightgray;
+    height: 200px;
+    display: flex;
+}
+
+.entry {
+    border-style: dotted;
+    width: 80px;
+    height: 100px;
+}
+
+.highlight {
+    outline:  red solid 2px;
+}
+
+button {
+    margin: 1em;
+    padding: 1em;
 }
 
 .tray {
@@ -91,8 +138,8 @@
 
 .minion .death {
     position: absolute;
-    width: 30;
-    height: 30;
+    width: 30%;
+    height: 30%;
     top: 90px;
     left: 25px;
     background-image: url('death.svg');
@@ -102,8 +149,8 @@
 
 .minion .poison {
     position: absolute;
-    width: 30;
-    height: 30;
+    width: 30%;
+    height: 30%;
     top: 90px;
     left: 25px;
     background-image: url('wasp-sting.svg');

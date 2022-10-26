@@ -1,3 +1,4 @@
+import * as util from './utils.js';
 export class Viewer {
 
     constructor(scriptObj) {
@@ -19,7 +20,7 @@ export class Viewer {
     setup(minions, trayId) {
         let tray = document.getElementById(trayId);
         minions.forEach(element => {
-            tray.appendChild(this.createMinion(element));
+            tray.appendChild(util.createMinion(element));
         });
     }
 
@@ -252,7 +253,7 @@ export class Viewer {
 
         anim.onfinish = function() {
             document
-                .getElementById(self.makeDomId(action.id))
+                .getElementById(util.makeDomId(action.id))
                 .remove();
 
             self.finalizePhase();
@@ -264,7 +265,7 @@ export class Viewer {
     actionSummon(action) {
 
         // create the new minion
-        let min = this.createMinion(action.minion);
+        let min = util.createMinion(action.minion);
 
         console.log("summon id:%d slot:%d", action.minion.id, action.slot);
 
@@ -304,57 +305,11 @@ export class Viewer {
     }
 
     minionById(id) {
-        return document.getElementById(this.makeDomId(id));
+        return document.getElementById(util.makeDomId(id));
     }
 
     elementsByClassName(root, className) {
         return root.getElementsByClassName(className);
-    }
-
-    makeDomId(id) {
-        return 'min' + id;
-    }
-
-    createMinion(minion) {
-
-        let min = document.createElement('div');
-        min.classList.add('minion');
-        min.id = this.makeDomId(minion.id);
-        min.title = minion.portrait;
-
-        let modifiers = "";
-
-        if (minion.skills.find(e => e === 'wall')) {
-            modifiers += '<div class="wall"></div>';
-        }
-
-        if (minion.skills.find(e => e === 'shield')) {
-            modifiers += '<div class="shield"></div>';
-        }
-
-        if (minion.skills.find(e => e === 'summon')) {
-            modifiers += '<div class="death"></div>';
-        }
-
-        if (minion.skills.find(e => e === 'poison')) {
-            modifiers += '<div class="poison"></div>';
-        }
-
-        min.innerHTML = `
-            <div class="image">
-                <div class="background"></div>
-                <svg class="portrait">
-                    <use href="#${minion.portrait}"/>
-                </svg>
-                ${modifiers}
-            </div>
-            <div class="stats">
-                <div class="attack">${minion.attack}</div>
-                <div class="health">${minion.health}</div>
-            </div>
-        `;
-
-        return min;
     }
 
     deltaToTarget(sourceMin, targetMin) {
