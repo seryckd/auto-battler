@@ -1,4 +1,6 @@
 
+* fix broken tests
+
 * attacker selection rules.  left to right.
 
 * minion skill definition for key value pairs  name:k=v,k=v
@@ -14,4 +16,7 @@
 * explosions and other animations
 
 * viewer should show amount of damage taken, not the amount left
+
+* merge both html files into one
+  possibly hidden sections, possibly set innerHtml
 

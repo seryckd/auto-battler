@@ -30,7 +30,7 @@
                </div>
 
                <div>
-                  <ul id="library" class="shelf">
+                  <ul id="database" class="shelf">
                   </ul>
                </div>
             </div>
@@ -42,66 +42,81 @@
          import * as util from './src/utils.js';
          import * as minions from './src/minions-db.js';
 
-         let minIds = [];
+         let minionDbs = [];
 
-         let t = document.getElementById('team');
          // drop targets
          var drops = document.getElementsByClassName('entry');
 
-         let p = document.getElementById('play');
-         p.addEventListener("click", e => {
+         let addToDrop = function(element, minId) {
+            var newMin = util.createMinion(minions.MinionDefs[minId]);
 
-            let ids = [];
+            newMin.dataset.id = minId;
 
-            const matches = document.querySelectorAll(".tray .entry");
+            if (element.hasChildNodes()) {
+               element.replaceChild(newMin, element.firstChild);
 
-            matches.forEach(m => {
-               Array.prototype.forEach.call(
-                  m.getElementsByClassName('minion'),
-                  min => {
-                     if (min != undefined) {
-                        console.log(min);
-                        ids.push(min.dataset.id);
+            } else {
+               element.appendChild(newMin);
+            }
+         }
+
+         let assignNewTeam = function(minions) {
+
+            for(let i=0;i<drops.length;i++) {
+               let entry = drops[i];
+               var minId = minions[i];
+
+               addToDrop(entry, minId);
+            }
+         }
+
+         let randomTeam = function() {
+
+            var minIds = [];
+
+            for(let i=0; i<6; i++) {
+               minIds.push(minionDbs[util.randomInt(minionDbs.length)]);
+            }
+
+            return minIds;
+         }
+
+         document.getElementById('play')
+            .addEventListener("click", e => {
+
+               let ids = [];
+
+               const matches = document.querySelectorAll(".tray .entry");
+
+               matches.forEach(m => {
+                  Array.prototype.forEach.call(
+                     m.getElementsByClassName('minion'),
+                     min => {
+                        if (min != undefined) {
+                           ids.push(min.dataset.id);
+                        }
                      }
-                  }
-               );
+                  );
 
-            });
-            sessionStorage.clear();
-            sessionStorage.setItem("minions", JSON.stringify(ids));
- 
-            location.href = 'viewer.html';
+               });
+               sessionStorage.clear();
+               sessionStorage.setItem("player", JSON.stringify(ids));
+               sessionStorage.setItem("computer", JSON.stringify(randomTeam()));
+   
+               location.href = 'viewer.html';
          });
 
          document.getElementById('random')
             .addEventListener('click', e => {
-
-               // Object.entries(minions.MinionDefs).length);
-               var rlen = 5;
-
-               for(let i=0;i<drops.length;i++) {
-                  let entry = drops[i];
-
-                  var rand = util.randomInt(minIds.length);
-                  var minId = minIds[rand];
-
-                  var newMin = util.createMinion(minions.MinionDefs[minId]);
-                  newMin.dataset.id = minId;
-
-                  if (entry.hasChildNodes()) {
-                     entry.replaceChild(newMin, entry.firstChild);
-
-                  } else {
-                     entry.appendChild(newMin);
-                  }
-
-               }
+               const minIds = randomTeam();
+               assignNewTeam(minIds);
             });
             
          // appears to be required for the drop event to hit the children??
-         t.addEventListener("dragover", (event) => {
-            event.preventDefault();
-         });
+         document.getElementById('team')
+            .addEventListener("dragover", (event) => {
+               event.preventDefault();
+            });
    
          for(let i=0;i<drops.length;i++) {
             let entry = drops[i];
@@ -122,21 +137,13 @@
                event.preventDefault();
                var minId = event.dataTransfer.getData("text/plain");
 
-               var newMin = util.createMinion(minions.MinionDefs[minId]);
-               newMin.dataset.id = minId;      
-
-               if (entry.hasChildNodes()) {
-                  entry.replaceChild(newMin, entry.firstChild);
-
-               } else {
-                  entry.appendChild(newMin);
-               }
+               addToDrop(entry, minId);
 
                entry.classList.toggle('highlight');
             });
          }
 
-         let l = document.getElementById('library');
+         let database = document.getElementById('database');
 
          Object
             .entries(minions.MinionDefs)
@@ -146,7 +153,7 @@
                min.draggable = true;
                min.dataset.id = minDef[0];
 
-               minIds.push(minDef[0]);
+               minionDbs.push(minDef[0]);
 
                min.addEventListener("dragstart", (event) => 
                   event.dataTransfer.setData("text/plain", minDef[0])
@@ -155,7 +162,7 @@
                let li = document.createElement('li');
                li.appendChild(min);
 
-               l.appendChild(li);
+               database.appendChild(li);
          });
 
       </script>

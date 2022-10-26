@@ -13,7 +13,7 @@
       
       <main>      
          <section title="controls">
-            <button type="button" id="play">play</button>
+            <button type="button" id="play">start</button>
             <button type="button" id="turn">next turn</button>
             <button type="button" id="restart">restart</button>
             <button type="button" id="new">new team</button>
@@ -58,13 +58,14 @@
          //let p1 = new Player('p1', ['003', '001', '002']);
          //let p2 = new Player('p2', ['002', '003', '002']);
 
-         let ids = JSON.parse(sessionStorage.getItem("minions"));
+         let playerIds = JSON.parse(sessionStorage.getItem("player"));
+         let computerIds = JSON.parse(sessionStorage.getItem("computer"));
 
-         console.log('starting ids ', ids);
+         console.log('starting ids ', playerIds);
 
          //let p1 = new Player('p1', ['004', '003' ]);
-         let p1 = new Player('p1', ids);
-         let p2 = new Player('p2', ['006' ]);
+         let p1 = new Player('p1', playerIds);
+         let p2 = new Player('p2', computerIds);
 
          // summon two
          //let p1 = new Player('p1', ['002' ]);
