@@ -1,4 +1,15 @@
 
+
+// ----------------------------------------------------------------------------
+// polyfil from core-js
+
+var hasOwnProperty = {}.hasOwnProperty;
+
+Object.hasOwn = Object.hasOwn || function hasOwn(it, key) {
+  return hasOwnProperty.call(Object(it), key);
+};
+// ----------------------------------------------------------------------------
+
 /**
  * Integer from 0 to (max-1)
  * @param {int} max 
