@@ -13,160 +13,83 @@
       
       <main>      
          <section title="controls">
-            <button type="button" id="play">play</button>
-            <button type="button" id="random">random</button>
-            <button type="button" id="clear">clear</button>
+            <button type="button" id="play">start</button>
+            <button type="button" id="turn">next turn</button>
+            <button type="button" id="restart">restart</button>
+            <button type="button" id="new">new team</button>
          </section>
 
          <section title="board">
             <div class="board">
-               <div class="tray" id="team">
-                  <div class="entry"></div>
-                  <div class="entry"></div>
-                  <div class="entry"></div>
-                  <div class="entry"></div>
-                  <div class="entry"></div>
-                  <div class="entry"></div>
+               <div class="tray" id="tray1">
                </div>
-
-               <div>
-                  <ul id="database" class="shelf">
-                  </ul>
+               <div class="tray" id="tray2">
                </div>
             </div>
          </section>
 
       </main>
 
-      <script type="module">
-         import * as util from './src/utils.js';
-         import * as minions from './src/minions-db.js';
+      <!-- set to 'module' to run scripts or 'module-ignore' to skip -->
+      <script type="module-ignore">
 
-         let minionDbs = [];
+         import { UnitTests } from './tests/tests-db.js';
+         import { runTests } from './tests/tests.js';
 
-         // drop targets
-         var drops = document.getElementsByClassName('entry');
-
-         let addToDrop = function(element, minId) {
-            var newMin = util.createMinion(minions.MinionDefs[minId]);
-
-            newMin.dataset.id = minId;
-
-            if (element.hasChildNodes()) {
-               element.replaceChild(newMin, element.firstChild);
-
-            } else {
-               element.appendChild(newMin);
-            }
-         }
-
-         let assignNewTeam = function(minions) {
-
-            for(let i=0;i<drops.length;i++) {
-               let entry = drops[i];
-               var minId = minions[i];
-
-               addToDrop(entry, minId);
-            }
-         }
-
-         let randomTeam = function() {
-
-            var minIds = [];
-
-            for(let i=0; i<6; i++) {
-               minIds.push(minionDbs[util.randomInt(minionDbs.length)]);
-            }
-
-            return minIds;
-         }
-
-         document.getElementById('play')
-            .addEventListener("click", e => {
-
-               let ids = [];
-
-               const matches = document.querySelectorAll(".tray .entry");
-
-               matches.forEach(m => {
-                  Array.prototype.forEach.call(
-                     m.getElementsByClassName('minion'),
-                     min => {
-                        if (min != undefined) {
-                           ids.push(min.dataset.id);
-                        }
-                     }
-                  );
-
-               });
-               sessionStorage.clear();
-               sessionStorage.setItem("player", JSON.stringify(ids));
-               sessionStorage.setItem("computer", JSON.stringify(randomTeam()));
-   
-               location.href = 'viewer.html';
-         });
-
-         document.getElementById('random')
-            .addEventListener('click', e => {
-               const minIds = randomTeam();
-               assignNewTeam(minIds);
-            });
-            
-         // appears to be required for the drop event to hit the children??
-         document.getElementById('team')
-            .addEventListener("dragover", (event) => {
-               event.preventDefault();
-            });
-   
-         for(let i=0;i<drops.length;i++) {
-            let entry = drops[i];
-
-            entry.addEventListener('dragenter', event => {
-               event.preventDefault();
-               // Note: classList.add() doesn't seem to work after the class
-               // has been removed with classList.remove()
-               entry.classList.toggle('highlight');
-            });
-
-            entry.addEventListener('dragleave', event => {
-               event.preventDefault();
-               entry.classList.toggle('highlight');
-            });
-
-            entry.addEventListener('drop', event => {
-               event.preventDefault();
-               var minId = event.dataTransfer.getData("text/plain");
-
-               addToDrop(entry, minId);
-
-               entry.classList.toggle('highlight');
-            });
-         }
-
-         let database = document.getElementById('database');
-
-         Object
-            .entries(minions.MinionDefs)
-            .forEach(minDef => {
-            
-               let min = util.createMinion(minDef[1]);
-               min.draggable = true;
-               min.dataset.id = minDef[0];
-
-               minionDbs.push(minDef[0]);
-
-               min.addEventListener("dragstart", (event) => 
-                  event.dataTransfer.setData("text/plain", minDef[0])
-               );
-
-               let li = document.createElement('li');
-               li.appendChild(min);
-
-               database.appendChild(li);
-         });
+         runTests(UnitTests);
 
       </script>
 
+      <script type="module">
+
+         import { Battler } from './src/battler.js';          
+         import { Minion } from './src/minion.js';
+         import { Player } from './src/player.js';
+         import { Viewer } from './src/viewer.js';
+
+         document.getElementById('new')
+            .addEventListener('click', e => {
+               location.href = 'index.html';
+            });
+
+         //let p1 = new Player('p1', ['001', '002', '001', '003']);
+         //let p2 = new Player('p2', ['001', '003', '002']);
+
+         //let p1 = new Player('p1', ['003', '001', '002']);
+         //let p2 = new Player('p2', ['002', '003', '002']);
+
+         let playerIds = JSON.parse(sessionStorage.getItem("player"));
+         let computerIds = JSON.parse(sessionStorage.getItem("computer"));
+
+         console.log('starting ids ', playerIds);
+
+         //let p1 = new Player('p1', ['004', '003' ]);
+         let p1 = new Player('p1', playerIds);
+         let p2 = new Player('p2', computerIds);
+
+         // summon two
+         //let p1 = new Player('p1', ['002' ]);
+         //let p2 = new Player('p2', ['003' ]);
+
+         let engine = new Battler(p1, p2);
+         
+         let viewer = new Viewer(JSON.parse(engine.battle()));
+
+         document.getElementById('play').addEventListener('click', event => {
+            document.getElementById('play').disabled = true;
+            viewer.playAllTurns(() => document.getElementById('play').disabled = false);
+         });
+         document.getElementById('turn').addEventListener('click', event => {
+            document.getElementById('turn').disabled = true;
+            viewer.playNextTurn(() => document.getElementById('turn').disabled = false);
+         });
+         document.getElementById('restart').addEventListener('click', event => {
+            document.getElementById('play').disabled = false;
+            document.getElementById('turn').disabled = false;
+            viewer.restartPlay();
+            viewer = new Viewer(JSON.parse(engine.battle()));
+         });
+      </script>
    </body>
 
    <!--

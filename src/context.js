@@ -47,7 +47,7 @@ export class Context {
      */
     addMinionId(id, slot) {
 
-        if (this.filledSlots() < 5) {
+        if (this.filledSlots() < 6) {
             let min = new Minion(id, this);
 
             if (slot === undefined) {
