@@ -4,6 +4,16 @@ export class Minion {
 
     static counter = 0;
 
+    static minionDatabase = MinionDefs;
+
+    static setDatabase(db) {
+        Minion.minionDatabase = db;
+    }
+
+    static getDatabase() {
+        return Minion.minionDatabase;
+    }
+
     /**
      * Minion has a unique id, and knows which context it belongs to.
      * 
@@ -15,13 +25,15 @@ export class Minion {
         this.defId = defId;
         this.context = context;
 
-        this.name = MinionDefs[defId].name;
-        this.portrait = MinionDefs[defId].portrait;
-        this.attack = MinionDefs[defId].attack;
-        this.health = MinionDefs[defId].health;
+        console.log(Minion.getDatabase());
+
+        this.name = Minion.getDatabase()[defId].name;
+        this.portrait = Minion.getDatabase()[defId].portrait;
+        this.attack = Minion.getDatabase()[defId].attack;
+        this.health = Minion.getDatabase()[defId].health;
 
         this.skills = Array
-            .from(MinionDefs[defId].skills)
+            .from(Minion.getDatabase()[defId].skills)
             .map(s => Skill.factory(s, self));
         this.id = Minion.counter++;
     }

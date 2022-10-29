@@ -1,5 +1,4 @@
-export var MinionDefs = {
- 
+export var TestMinionDefs = {
     'TST-1-1': {
         'name': 'test',
         'portrait': 'piranha',
