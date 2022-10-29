@@ -1,6 +1,4 @@
 
-* fix broken tests
-
 * attacker selection rules.  left to right.
 
 * minion skill definition for key value pairs  name:k=v,k=v
@@ -19,8 +17,6 @@
 
 * merge both html files into one
   possibly hidden sections, possibly set innerHtml
-
-* 'clear' button not working
 
 * add all core-js polyfils
 
