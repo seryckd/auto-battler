@@ -38,6 +38,16 @@
 
       </main>
 
+      <!-- set to 'module' to run scripts or 'module-ignore' to skip -->
+      <script type="module-ignore">
+
+         import { UnitTests } from './tests/tests-db.js';
+         import { runTests } from './tests/tests.js';
+
+         runTests(UnitTests);
+
+      </script>
+
       <script type="module">
          import * as util from './src/utils.js';
          import * as minions from './src/minions-db.js';
@@ -110,6 +120,16 @@
             .addEventListener('click', e => {
                const minIds = randomTeam();
                assignNewTeam(minIds);
+            });
+
+         document.getElementById('clear')
+            .addEventListener('click', e => {
+               for(let i=0;i<drops.length;i++) {
+                  const element = drops[i];
+                  if (element.hasChildNodes()) {
+                     element.removeChild(element.firstChild);
+                  }
+               }
             });
             
          // appears to be required for the drop event to hit the children??
